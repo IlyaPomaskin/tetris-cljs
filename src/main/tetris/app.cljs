@@ -163,7 +163,7 @@
 (def game-state-container (js/document.querySelector "#game-state"))
 (defn render-stack-cell [cell y x]
   (string/join
-   ["<div class='btn " (if (= cell 0) " " (string/join ["btn-" cell])) "'>"
+   ["<div class='cell " (if (= cell 0) " " (string/join ["cell-" cell])) "'>"
     "</div>"]))
 (defn render-stack [stack]
   (string/join
