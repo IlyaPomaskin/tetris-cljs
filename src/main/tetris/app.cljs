@@ -1,6 +1,6 @@
 (ns tetris.app
   (:require [clojure.string :as string]
-            [tetris.tetrominos :as tetrominos]))
+            [tetris.tetrominoes :as tetrominoes]))
 
 (enable-console-print!)
 
@@ -8,7 +8,7 @@
 (def field-height 10)
 
 (defn create-new-piece []
-  {:cells (rand-nth tetrominos/items)
+  {:cells (rand-nth tetrominoes/items)
    :x (/ field-width 2)
    :y 0})
 
