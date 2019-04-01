@@ -1,4 +1,4 @@
-(ns tetris.tetrominos)
+(ns tetris.tetrominoes)
 
 (def i
   [[1]
