@@ -2,9 +2,8 @@
   (:require [tetris.tetrominoes :as tetrominoes]))
 
 
-(defn create-new-piece [x]
-  (let [piece (rand-nth tetrominoes/items)
-        piece-width (-> (count (first piece))
+(defn make-piece [piece x]
+  (let [piece-width (-> (count (first piece))
                         (/ 2)
                         (Math/floor))]
     {:cells piece
@@ -12,9 +11,22 @@
      :y 0}))
 
 
+(defn use-next-piece [state]
+  (let [{stack :stack
+         buffer :buffer} state
+        field-width (count (first stack))
+        [[piece] next-buffer] (split-at 1 buffer)]
+    (-> state
+        (assoc :buffer (if (empty? next-buffer)
+                         (shuffle tetris.tetrominoes/items)
+                         next-buffer))
+        (assoc :piece (make-piece piece (/ field-width 2))))))
+
+
 (defn create-game [field-width field-height]
   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
-   :piece (create-new-piece (/ field-width 2))
+   :piece (make-piece (rand-nth tetrominoes/items) (/ field-width 2))
+   :buffer (shuffle tetris.tetrominoes/items)
    :state :game})
 
 
@@ -59,16 +71,19 @@
     (or out-of-y-bound? out-of-x-bound?)))
 
 
-(defn place-piece [stack piece]
-  (let [piece-symbol (->> (get piece :cells)
+(defn place-piece [state]
+  (let [{stack :stack
+         piece :piece} state
+        piece-symbol (->> (get piece :cells)
                           (flatten)
                           (filter #(not (zero? %1)))
                           (first))
-        piece-coords (piece->coords piece)]
-    (reduce
-     (fn [stack [y x]] (assoc-in stack [y x] piece-symbol))
-     stack
-     piece-coords)))
+        piece-coords (piece->coords piece)
+        next-stack (reduce
+                    (fn [stack [y x]] (assoc-in stack [y x] piece-symbol))
+                    stack
+                    piece-coords)]
+    (assoc state :stack next-stack)))
 
 
 (defn rotate-clockwise [cells]
@@ -116,13 +131,15 @@
     (assoc piece :y last-y)))
 
 
-(defn remove-filled-lines [stack]
-  (let [field-height (count stack)
+(defn remove-filled-lines [state]
+  (let [stack (get state :stack)
+        field-height (count stack)
         field-width (count (first stack))
         stack-wo-lines (filterv #(not-every? pos? %1) stack)
-        removed-lines-count (- field-height (count stack-wo-lines))]
-    (into [] (concat (vec (repeat removed-lines-count (vec (repeat field-width 0))))
-                     stack-wo-lines))))
+        removed-lines-count (- field-height (count stack-wo-lines))
+        new-empty-lines (vec (repeat removed-lines-count (vec (repeat field-width 0))))
+        next-stack (into [] (concat new-empty-lines stack-wo-lines))]
+    (assoc state :stack next-stack)))
 
 
 (defn check-game-over [state]
@@ -134,13 +151,11 @@
 
 
 (defn next-cycle [state]
-  (let
-   [field-width (count (first (get state :stack)))]
-    (-> state
-        (update-in [:stack] place-piece (get state :piece))
-        (update-in [:stack] remove-filled-lines)
-        (assoc-in [:piece] (create-new-piece (/ field-width 2)))
-        (check-game-over))))
+  (-> state
+      (place-piece)
+      (remove-filled-lines)
+      (use-next-piece)
+      (check-game-over)))
 
 
 (defn fall [state]

@@ -1,7 +1,10 @@
 (ns tetris.tetrominoes)
 
 (def i
-  [[1 1 1 1]])
+  [[1]
+   [1]
+   [1]
+   [1]])
 (def z
   [[2 2 0]
    [0 2 2]])

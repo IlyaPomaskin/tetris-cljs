@@ -23,7 +23,8 @@
 
 
 (defn render-game [_ _ _ state]
-  (set! (.-innerHTML stack-container) (render-stack (game/place-piece (get state :stack) (get state :piece)))))
+  (let [stack-with-piece (get (game/place-piece state) :stack)]
+    (set! (.-innerHTML stack-container) (render-stack stack-with-piece))))
 
 
 (defn render-state [_ _ _ state]
