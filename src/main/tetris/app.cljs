@@ -10,12 +10,8 @@
 (def field-height 16)
 
 
-(defonce game-state
-  (atom (game/create-game field-width field-height)))
-
-
-(add-watch game-state :render ui/render-game)
-(add-watch game-state :state ui/render-state)
+(defonce game-state (atom (game/create-game field-width field-height)))
+(defonce game-timer (atom nil))
 
 
 (defn handle-key-press [event]
@@ -33,11 +29,26 @@
       (reset! game-state next-state))))
 
 
-(defn game-loop []
-  (swap! game-state #(if (game/game-over? %1) %1 (game/fall %1))))
+(defn game-loop [] (swap! game-state game/fall))
+
+
+(defn check-game-over [_ _ _ state]
+  (when (game/game-over? state)
+    (js/clearInterval @game-timer)))
+
+
+(defn update-speed [_ _ prev-state state]
+  (when (not= (get prev-state :speed)
+              (get state :speed))
+    (do
+      (js/clearInterval @game-timer)
+      (reset! game-timer (js/setInterval game-loop (get @game-state :speed))))))
 
 
 (defn init []
+  (reset! game-timer (js/setInterval game-loop (get @game-state :speed)))
   (js/window.addEventListener "keydown" handle-key-press)
-  (js/setInterval game-loop 1000)
-  (js/console.log "init"))
+  (add-watch game-state :render ui/render-game)
+  (add-watch game-state :state ui/render-state)
+  (add-watch game-state :game-over check-game-over)
+  (add-watch game-state :speed update-speed))

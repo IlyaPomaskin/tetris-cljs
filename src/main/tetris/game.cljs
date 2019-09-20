@@ -27,6 +27,7 @@
   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
    :piece (make-piece (rand-nth tetrominoes/items) (/ field-width 2))
    :buffer (shuffle tetris.tetrominoes/items)
+   :speed 500
    :state :game})
 
 
