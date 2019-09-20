@@ -2,16 +2,19 @@
   (:require [tetris.tetrominoes :as tetrominoes]))
 
 
-(defn create-new-piece [x y]
-  (println x y)
-  {:cells (rand-nth tetrominoes/items)
-   :x x
-   :y y})
+(defn create-new-piece [x]
+  (let [piece (rand-nth tetrominoes/items)
+        piece-width (-> (count (first piece))
+                        (/ 2)
+                        (Math/floor))]
+    {:cells piece
+     :x (- x piece-width)
+     :y 0}))
 
 
 (defn create-game [field-width field-height]
   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
-   :piece (create-new-piece (/ field-width 2) 0)
+   :piece (create-new-piece (/ field-width 2))
    :state :game})
 
 
@@ -136,7 +139,7 @@
     (-> state
         (update-in [:stack] place-piece (get state :piece))
         (update-in [:stack] remove-filled-lines)
-        (assoc-in [:piece] (create-new-piece (/ field-width 2) 0))
+        (assoc-in [:piece] (create-new-piece (/ field-width 2)))
         (check-game-over))))
 
 
