@@ -28,4 +28,10 @@
 
 
 (defn render-state [_ _ _ state]
-  (set! (.-innerHTML game-state-container) (get state :state)))
+  (let [{state :state
+         speed :speed} state]
+    (set!
+     (.-innerHTML game-state-container)
+     (if (= state :game)
+       (string/join " " ["speed" speed])
+       "game over"))))

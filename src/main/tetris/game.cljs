@@ -144,8 +144,8 @@
 
 
 (defn check-game-over [state]
-  (let [stack (get state :stack)
-        piece (get state :piece)]
+  (let [{stack :stack
+         piece :piece} state]
     (if (has-collisions? stack piece)
       (assoc state :state :game-over)
       state)))
