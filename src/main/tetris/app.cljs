@@ -15,18 +15,16 @@
 
 
 (defn handle-key-press [event]
-  (let [key (.-code event)
-        state @game-state
-        next-state (case key
-                     "ArrowLeft" (game/move-piece -1 state)
-                     "ArrowRight" (game/move-piece 1 state)
-                     "ArrowUp" (game/rotate-piece :up state)
-                     "ArrowDown" (game/rotate-piece :down state)
-                     "Space" (game/hard-drop state)
-                     state)]
-    (if (game/game-over? state)
-      state
-      (reset! game-state next-state))))
+  (swap!
+   game-state
+   (fn [state]
+     (case (.-code event)
+       "ArrowLeft" (game/move-piece -1 state)
+       "ArrowRight" (game/move-piece 1 state)
+       "ArrowUp" (game/rotate-piece :up state)
+       "ArrowDown" (game/rotate-piece :down state)
+       "Space" (game/hard-drop state)
+       state))))
 
 
 (defn game-loop [] (swap! game-state game/fall))
@@ -34,7 +32,9 @@
 
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
-    (js/clearInterval @game-timer)))
+    (do
+      (js/clearInterval @game-timer)
+      (js/window.removeEventListener "keydown" handle-key-press))))
 
 
 (defn update-speed [_ _ prev-state state]
