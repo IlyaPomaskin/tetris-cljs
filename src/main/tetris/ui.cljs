@@ -15,7 +15,7 @@
 
 (defn render-stack [stack]
   (string/join
-   "\n"
+   "<br/>"
    (vec (for [[stack-y line] (map-indexed vector stack)]
           (string/join
            (vec (for [[stack-x cell] (map-indexed vector line)]
