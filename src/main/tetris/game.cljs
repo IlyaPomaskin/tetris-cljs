@@ -130,12 +130,14 @@
       (assoc-in state [:piece] next-piece))))
 
 
-(defn drop-piece [stack piece]
-  (let [last-y (->> (range (get piece :y) (count stack))
+(defn drop-piece [state]
+  (let [{stack :stack
+         piece :piece} state
+        last-y (->> (range (get piece :y) (count stack))
                     (filter #(or (has-collisions? stack (assoc piece :y (+ 1 %1)))
                                  (out-of-bounds? stack (assoc piece :y (+ 1 %1)))))
                     (first))]
-    (assoc piece :y last-y)))
+    (assoc-in state [:piece :y] last-y)))
 
 
 (defn get-level [lines]
@@ -203,5 +205,5 @@
 
 (defn hard-drop [state]
   (-> state
-      (update-in [:piece] #(drop-piece (get state :stack) %1))
+      (drop-piece)
       (next-cycle)))
