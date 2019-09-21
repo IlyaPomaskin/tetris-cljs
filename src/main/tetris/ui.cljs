@@ -41,6 +41,8 @@
 (defn render-state [_ _ _ state]
   (set!
    (.-innerHTML game-state-container)
-   (if (= (get state :state) :game)
-     (render-stats state)
-     "game over")))
+   (string/join
+    "<br/>"
+    [(when (= (get state :state) :game-over)
+       "Game over")
+     (render-stats state)])))
