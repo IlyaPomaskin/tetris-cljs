@@ -2,6 +2,11 @@
   (:require [tetris.tetrominoes :as tetrominoes]))
 
 
+(def lines-per-level 20)
+(def base-timer 750)
+(def timer-ms-per-level 50)
+
+
 (defn make-piece [piece x]
   (let [piece-width (-> (count (first piece))
                         (/ 2)
@@ -134,13 +139,13 @@
 
 
 (defn get-level [lines]
-  (Math/ceil (/ (+ 1 lines) 30)))
+  (Math/ceil (/ (+ 1 lines) lines-per-level)))
 
 
 (defn get-speed [state]
   (let [lines (get state :lines)
         level (get-level lines)]
-    (- 1000 (* level 50))))
+    (- base-timer (* level timer-ms-per-level))))
 
 
 (defn get-score [lines-count level]
