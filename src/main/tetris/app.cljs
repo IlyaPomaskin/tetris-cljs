@@ -33,20 +33,28 @@
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
     (do
-      (js/clearInterval @game-timer)
+      (clear-timer!)
       (js/window.removeEventListener "keydown" handle-key-press))))
+
+
+(defn create-timer! [timeout]
+  (reset! game-timer (js/setInterval game-loop timeout)))
+
+
+(defn clear-timer! []
+  (swap! game-timer js/clearInterval))
 
 
 (defn update-speed [_ _ prev-state state]
   (when (not= (get prev-state :speed)
               (get state :speed))
     (do
-      (js/clearInterval @game-timer)
-      (reset! game-timer (js/setInterval game-loop (get @game-state :speed))))))
+      (clear-timer!)
+      (create-timer! (get state :speed)))))
 
 
 (defn init []
-  (reset! game-timer (js/setInterval game-loop (get @game-state :speed)))
+  (create-timer! (get @game-state :speed))
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
   (add-watch game-state :state ui/render-state)
