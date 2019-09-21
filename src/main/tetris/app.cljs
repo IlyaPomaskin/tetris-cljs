@@ -46,15 +46,15 @@
 
 
 (defn update-speed [_ _ prev-state state]
-  (when (not= (get prev-state :speed)
-              (get state :speed))
+  (when (not= (game/get-speed prev-state)
+              (game/get-speed state))
     (do
       (clear-timer!)
-      (create-timer! (get state :speed)))))
+      (create-timer! (game/get-speed state)))))
 
 
 (defn init []
-  (create-timer! (get @game-state :speed))
+  (create-timer! (game/get-speed @game-state))
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
   (add-watch game-state :state ui/render-state)

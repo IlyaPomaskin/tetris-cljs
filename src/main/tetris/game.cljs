@@ -27,7 +27,8 @@
   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
    :piece (make-piece (rand-nth tetrominoes/items) (/ field-width 2))
    :buffer (shuffle tetris.tetrominoes/items)
-   :speed 500
+   :score 0
+   :lines 0
    :state :game})
 
 
@@ -132,15 +133,41 @@
     (assoc piece :y last-y)))
 
 
+(defn get-level [lines]
+  (Math/ceil (/ (+ 1 lines) 30)))
+
+
+(defn get-speed [state]
+  (let [lines (get state :lines)
+        level (get-level lines)]
+    (- 1000 (* level 50))))
+
+
+(defn get-score [lines-count level]
+  (* level
+     (case lines-count
+       1 40
+       2 100
+       3 300
+       4 1200
+       0)))
+
+
 (defn remove-filled-lines [state]
-  (let [stack (get state :stack)
+  (let [{stack :stack
+         lines :lines} state
         field-height (count stack)
         field-width (count (first stack))
         stack-wo-lines (filterv #(not-every? pos? %1) stack)
         removed-lines-count (- field-height (count stack-wo-lines))
         new-empty-lines (vec (repeat removed-lines-count (vec (repeat field-width 0))))
-        next-stack (into [] (concat new-empty-lines stack-wo-lines))]
-    (assoc state :stack next-stack)))
+        next-stack (into [] (concat new-empty-lines stack-wo-lines))
+        next-lines (+ lines removed-lines-count)
+        score (get-score removed-lines-count (get-level next-lines))]
+    (-> state
+        (assoc :stack next-stack)
+        (assoc :lines next-lines)
+        (update-in [:score] + score))))
 
 
 (defn check-game-over [state]

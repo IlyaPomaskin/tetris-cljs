@@ -27,11 +27,20 @@
     (set! (.-innerHTML stack-container) (render-stack stack-with-piece))))
 
 
-(defn render-state [_ _ _ state]
+(defn render-stats [state]
   (let [{state :state
-         speed :speed} state]
-    (set!
-     (.-innerHTML game-state-container)
-     (if (= state :game)
-       (string/join " " ["speed" speed])
-       "game over"))))
+         score :score
+         lines :lines} state]
+    (string/join
+     "<br/>"
+     [(string/join ["level: " (game/get-level lines)])
+      (string/join ["lines: " lines])
+      (string/join ["score: " score])])))
+
+
+(defn render-state [_ _ _ state]
+  (set!
+   (.-innerHTML game-state-container)
+   (if (= (get state :state) :game)
+     (render-stats state)
+     "game over")))
