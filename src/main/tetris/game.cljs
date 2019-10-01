@@ -75,6 +75,11 @@
        (some?)))
 
 
+(defn can-place? [stack piece]
+  (or (has-collisions? stack piece)
+      (out-of-bounds? stack piece)))
+
+
 (defn place-piece [state]
   (let [{stack :stack
          piece :piece} state
@@ -106,8 +111,7 @@
                      :counterclockwise (rotate-counterclockwise cells)
                      cells)
         next-piece (assoc piece :cells next-cells)]
-    (if (or (has-collisions? stack next-piece)
-            (out-of-bounds? stack next-piece))
+    (if (can-place? stack next-piece)
       state
       (assoc-in state [:piece] next-piece))))
 
@@ -117,8 +121,7 @@
          piece :piece} state
         next-x (+ (get piece :x) offset)
         next-piece (assoc piece :x next-x)]
-    (if (or (has-collisions? stack next-piece)
-            (out-of-bounds? stack next-piece))
+    (if (can-place? stack next-piece)
       state
       (assoc-in state [:piece] next-piece))))
 
@@ -127,8 +130,7 @@
   (let [{stack :stack
          piece :piece} state
         last-y (->> (range (get piece :y) (count stack))
-                    (filter #(or (has-collisions? stack (assoc piece :y (+ 1 %1)))
-                                 (out-of-bounds? stack (assoc piece :y (+ 1 %1)))))
+                    (filter #(can-place? stack (assoc piece :y (+ 1 %1))))
                     (first))]
     (assoc-in state [:piece :y] last-y)))
 
@@ -190,9 +192,7 @@
   (let [stack (get state :stack)
         current-piece (get state :piece)
         next-piece (update-in current-piece [:y] inc)]
-    (if (or
-         (has-collisions? stack next-piece)
-         (out-of-bounds? stack next-piece))
+    (if (can-place? stack next-piece)
       (next-cycle state)
       (assoc-in state [:piece] next-piece))))
 
