@@ -21,8 +21,8 @@
      (case (.-code event)
        "ArrowLeft" (game/move-piece -1 state)
        "ArrowRight" (game/move-piece 1 state)
-       "ArrowUp" (game/rotate-piece :up state)
-       "ArrowDown" (game/rotate-piece :down state)
+       "ArrowUp" (game/rotate-piece :clockwise state)
+       "ArrowDown" (game/rotate-piece :counterclockwise state)
        "Space" (game/hard-drop state)
        state))))
 

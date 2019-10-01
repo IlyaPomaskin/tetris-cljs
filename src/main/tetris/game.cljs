@@ -98,7 +98,7 @@
   (vec (mapv #(vec (reverse %1)) (apply mapv vector cells))))
 
 
-(defn rotate-anticlockwise [cells]
+(defn rotate-counterclockwise [cells]
   (vec (apply mapv vector (mapv #(vec (reverse %1)) cells))))
 
 
@@ -107,8 +107,8 @@
          piece :piece} state
         cells (get piece :cells)
         next-cells (case direction
-                     :up (rotate-anticlockwise cells)
-                     :down (rotate-clockwise cells)
+                     :clockwise (rotate-clockwise cells)
+                     :counterclockwise (rotate-counterclockwise cells)
                      cells)
         next-piece (assoc piece :cells next-cells)]
     (if (or (has-collisions? stack next-piece)
