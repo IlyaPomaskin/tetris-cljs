@@ -35,7 +35,7 @@
 
 (defn create-game [field-width field-height]
   (use-next-piece
-   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
+   {:stack (vec (repeat field-height (vec (repeat field-width nil))))
     :piece nil
     :buffer (shuffle tetrominoes/srs-items)
     :score 0
@@ -75,7 +75,7 @@
 (defn has-collisions? [stack piece]
   (->> (piece->coords piece)
        (map #(get-in stack %1))
-       (filter pos?)
+       (filter some?)
        (first)
        (some?)))
 
@@ -85,22 +85,10 @@
       (out-of-bounds? stack piece)))
 
 
-(defn piece->symbol [piece]
-  (case (get-in piece [:piece :name])
-    :l 1
-    :j 2
-    :s 3
-    :t 4
-    :z 5
-    :o 6
-    :i 7
-    9))
-
-
 (defn place-piece [state]
   (let [{stack :stack
          piece :piece} state
-        piece-symbol (piece->symbol piece)
+        piece-symbol (get-in piece [:piece :name])
         next-stack (reduce
                     (fn [stack [y x]] (assoc-in stack [y x] piece-symbol))
                     stack
@@ -193,9 +181,9 @@
          lines :lines} state
         field-height (count stack)
         field-width (count (first stack))
-        stack-wo-lines (filterv #(not-every? pos? %1) stack)
+        stack-wo-lines (filterv #(not-every? some? %1) stack)
         removed-lines-count (- field-height (count stack-wo-lines))
-        new-empty-lines (vec (repeat removed-lines-count (vec (repeat field-width 0))))
+        new-empty-lines (vec (repeat removed-lines-count (vec (repeat field-width nil))))
         next-stack (into [] (concat new-empty-lines stack-wo-lines))
         next-lines (+ lines removed-lines-count)
         score (get-score removed-lines-count (get-level next-lines))]

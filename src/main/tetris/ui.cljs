@@ -7,10 +7,21 @@
 (def game-state-container (js/document.querySelector "#game-state"))
 
 
+(defn cell->class [cell]
+  (case cell
+    :l "cell-l"
+    :j "cell-j"
+    :s "cell-s"
+    :t "cell-t"
+    :z "cell-z"
+    :o "cell-o"
+    :i "cell-i"
+    " "))
+
+
 (defn render-stack-cell [cell y x]
   (string/join
-   ["<div class='cell " (if (= cell 0) " " (string/join ["cell-" cell])) "'>"
-    "</div>"]))
+   ["<div class='cell " (cell->class cell) "'></div>"]))
 
 
 (defn render-stack [stack]
