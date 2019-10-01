@@ -7,11 +7,16 @@
 (def timer-ms-per-level 50)
 
 
+(defn get-rotated-piece [piece]
+  (get-in piece [:piece (get piece :rotation)]))
+
+
 (defn make-piece [piece x]
   (let [piece-width (-> (count (first piece))
                         (/ 2)
                         (Math/floor))]
-    {:cells piece
+    {:piece piece
+     :rotation :0
      :x (- x piece-width)
      :y 0}))
 
@@ -39,9 +44,9 @@
 
 
 (defn piece->coords [piece]
-  (let [{cells :cells
-         piece-x :x
-         piece-y :y} piece]
+  (let [{piece-x :x
+         piece-y :y} piece
+        cells (get-rotated-piece piece)]
     (for [[cell-y line] (map-indexed vector cells)
           [cell-x] (map-indexed vector line)
           :let [stack-y (+ piece-y cell-y)
@@ -80,13 +85,22 @@
       (out-of-bounds? stack piece)))
 
 
+(defn piece->symbol [piece]
+  (case (get-in piece [:piece :name])
+    :l 1
+    :j 2
+    :s 3
+    :t 4
+    :z 5
+    :o 6
+    :i 7
+    9))
+
+
 (defn place-piece [state]
   (let [{stack :stack
          piece :piece} state
-        piece-symbol (->> (get piece :cells)
-                          (flatten)
-                          (filter #(not (zero? %1)))
-                          (first))
+        piece-symbol (piece->symbol piece)
         next-stack (reduce
                     (fn [stack [y x]] (assoc-in stack [y x] piece-symbol))
                     stack
@@ -102,18 +116,37 @@
   (vec (apply mapv vector (mapv #(vec (reverse %1)) cells))))
 
 
+(def rotation-clockwise
+  {:0 :r
+   :r :2
+   :2 :l
+   :l :0})
+
+
+(def rotation-counterclockwise
+  {:l :2
+   :2 :r
+   :r :0
+   :0 :l})
+
+
+(defn rotate [direction piece]
+  (let [rotation (get piece :rotation)
+        next-rotations (case direction
+                         :clockwise rotation-clockwise
+                         :counterclockwise rotation-counterclockwise
+                         rotate-clockwise)
+        next-rotation (get next-rotations rotation)]
+    (assoc piece :rotation next-rotation)))
+
+
 (defn rotate-piece [direction state]
   (let [{stack :stack
          piece :piece} state
-        cells (get piece :cells)
-        next-cells (case direction
-                     :clockwise (rotate-clockwise cells)
-                     :counterclockwise (rotate-counterclockwise cells)
-                     cells)
-        next-piece (assoc piece :cells next-cells)]
+        next-piece (rotate direction piece)]
     (if (can-place? stack next-piece)
       state
-      (assoc-in state [:piece] next-piece))))
+      (assoc state :piece next-piece))))
 
 
 (defn move-piece [offset state]
@@ -123,7 +156,7 @@
         next-piece (assoc piece :x next-x)]
     (if (can-place? stack next-piece)
       state
-      (assoc-in state [:piece] next-piece))))
+      (assoc state :piece next-piece))))
 
 
 (defn drop-piece [state]
@@ -194,7 +227,7 @@
         next-piece (update-in current-piece [:y] inc)]
     (if (can-place? stack next-piece)
       (next-cycle state)
-      (assoc-in state [:piece] next-piece))))
+      (assoc state :piece next-piece))))
 
 
 (defn hard-drop [state]
