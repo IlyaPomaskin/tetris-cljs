@@ -23,18 +23,19 @@
         [[piece] next-buffer] (split-at 1 buffer)]
     (-> state
         (assoc :buffer (if (empty? next-buffer)
-                         (shuffle tetris.tetrominoes/items)
+                         (shuffle tetrominoes/items)
                          next-buffer))
         (assoc :piece (make-piece piece (/ field-width 2))))))
 
 
 (defn create-game [field-width field-height]
-  {:stack (vec (repeat field-height (vec (repeat field-width 0))))
-   :piece (make-piece (rand-nth tetrominoes/items) (/ field-width 2))
-   :buffer (shuffle tetris.tetrominoes/items)
-   :score 0
-   :lines 0
-   :state :game})
+  (use-next-piece
+   {:stack (vec (repeat field-height (vec (repeat field-width 0))))
+    :piece nil
+    :buffer (shuffle tetrominoes/items)
+    :score 0
+    :lines 0
+    :state :game}))
 
 
 (defn piece->coords [piece]
@@ -102,8 +103,8 @@
 
 
 (defn rotate-piece [direction state]
-  (let [piece (get state :piece)
-        stack (get state :stack)
+  (let [{stack :stack
+         piece :piece} state
         cells (get piece :cells)
         next-cells (case direction
                      :up (rotate-anticlockwise cells)
