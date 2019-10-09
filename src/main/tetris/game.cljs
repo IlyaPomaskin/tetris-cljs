@@ -128,21 +128,32 @@
     (assoc piece :rotation next-rotation)))
 
 
-(defn rotate-piece [direction state]
-  (let [{stack :stack
-         piece :piece} state
-        next-piece (rotate direction piece)]
-    (if (can-place? stack next-piece)
-      state
-      (assoc state :piece next-piece))))
-
-
 (defn move-piece [[x y] state]
   (let [{stack :stack
          piece :piece} state
         next-piece (-> piece
                        (update-in [:x] + x)
                        (update-in [:y] + y))]
+    (if (can-place? stack next-piece)
+      state
+      (assoc state :piece next-piece))))
+
+
+(defn rotate-piece [direction state]
+  (let [{stack :stack
+         piece :piece} state
+        ; TODO counterclockwise rotation
+        wall-kicks (get
+                    (if (= :i (get-in piece [:piece :name]))
+                      tetrominoes/wall-kick-i
+                      tetrominoes/wall-kick)
+                    (get piece :rotation))
+        offset (->> wall-kicks
+                    (filter #(not= (move-piece %1 state) state))
+                    (first))
+        next-piece (-> (rotate direction piece)
+                       (update-in [:x] + (first offset))
+                       (update-in [:y] + (second offset)))]
     (if (can-place? stack next-piece)
       state
       (assoc state :piece next-piece))))

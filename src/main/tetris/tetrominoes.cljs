@@ -139,52 +139,57 @@
    [-1 1]
    [0 -2]
    [-1 -2]])
-
 (def wall-kick-R->2
   [[0 0]
    [1 0]
    [1 -1]
    [0 2]
    [1 2]])
-
 (def wall-kick-2->L
   [[0 0]
    [1 0]
    [1 1]
    [0 -2]
    [1 -2]])
-
 (def wall-kick-L->0
   [[0 0]
    [-1 0]
    [-1 -1]
    [0 2]
    [-1 2]])
-
 (def wall-kick-i-0->R
   [[0 0]
    [-2 0]
    [1 0]
    [-2 -1]
    [1 2]])
-
 (def wall-kick-i-R->2
   [[0 0]
    [-1 0]
    [2 0]
    [-1 2]
    [2 -1]])
-
 (def wall-kick-i-2->L
   [[0 0]
    [2 0]
    [-1 0]
    [2 1]
    [-1 -2]])
-
 (def wall-kick-i-L->0
   [[0 0]
    [1 0]
    [-2 0]
    [1 -2]
    [-2 1]])
+
+(def wall-kick
+  {:0 wall-kick-0->R
+   :r wall-kick-R->2
+   :2 wall-kick-2->L
+   :l wall-kick-L->0})
+
+(def wall-kick-i
+  {:0 wall-kick-i-0->R
+   :r wall-kick-i-R->2
+   :2 wall-kick-i-2->L
+   :l wall-kick-i-L->0})
