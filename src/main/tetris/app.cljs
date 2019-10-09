@@ -10,7 +10,7 @@
 (def field-height 16)
 
 
-(defonce game-state (atom (game/create-game field-width field-height)))
+(defonce game-state (atom nil))
 (defonce game-timer (atom nil))
 
 
@@ -54,9 +54,10 @@
 
 
 (defn init []
-  (create-timer! (game/get-speed @game-state))
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
   (add-watch game-state :state ui/render-state)
   (add-watch game-state :game-over check-game-over)
-  (add-watch game-state :speed update-speed))
+  (add-watch game-state :speed update-speed)
+  (reset! game-state (game/create-game field-width field-height))
+  (create-timer! (game/get-speed @game-state)))
