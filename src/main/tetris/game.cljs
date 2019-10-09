@@ -137,11 +137,12 @@
       (assoc state :piece next-piece))))
 
 
-(defn move-piece [offset state]
+(defn move-piece [[x y] state]
   (let [{stack :stack
          piece :piece} state
-        next-x (+ (get piece :x) offset)
-        next-piece (assoc piece :x next-x)]
+        next-piece (-> piece
+                       (update-in [:x] + x)
+                       (update-in [:y] + y))]
     (if (can-place? stack next-piece)
       state
       (assoc state :piece next-piece))))
@@ -201,7 +202,7 @@
       state)))
 
 
-(defn next-cycle [state]
+(defn next-piece-cycle [state]
   (-> state
       (place-piece)
       (remove-filled-lines)
@@ -210,15 +211,14 @@
 
 
 (defn fall [state]
-  (let [stack (get state :stack)
-        current-piece (get state :piece)
-        next-piece (update-in current-piece [:y] inc)]
-    (if (can-place? stack next-piece)
-      (next-cycle state)
-      (assoc state :piece next-piece))))
+  (let [next-state (move-piece [0 1] state)
+        moved? (not= state next-state)]
+    (if moved?
+      next-state
+      (next-piece-cycle state))))
 
 
 (defn hard-drop [state]
   (-> state
       (drop-piece)
-      (next-cycle)))
+      (next-piece-cycle)))

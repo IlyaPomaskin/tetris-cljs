@@ -19,8 +19,8 @@
    game-state
    (fn [state]
      (case (.-code event)
-       "ArrowLeft" (game/move-piece -1 state)
-       "ArrowRight" (game/move-piece 1 state)
+       "ArrowLeft" (game/move-piece [-1 0] state)
+       "ArrowRight" (game/move-piece [1 0] state)
        "ArrowUp" (game/rotate-piece :clockwise state)
        "ArrowDown" (game/rotate-piece :counterclockwise state)
        "Space" (game/hard-drop state)
