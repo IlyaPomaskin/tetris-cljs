@@ -5,6 +5,10 @@
   <meta charset="UTF-8">
   <title>tetris-cljs</title>
   <style>
+    :root {
+      --decorative-pixel-size: 3px;
+    }
+
     html,
     body {
       height: 100%;
@@ -23,32 +27,78 @@
       box-sizing: border-box;
     }
 
+    .cell-filled {
+      border-bottom: var(--decorative-pixel-size) solid black;
+      border-right: var(--decorative-pixel-size) solid black;
+      border-top: 0;
+      border-left: 0;
+    }
+
+    .cell-filled:before {
+      position: absolute;
+      content: ' ';
+      display: block;
+      left: 0;
+      top: 0;
+      width: var(--decorative-pixel-size);
+      height: var(--decorative-pixel-size);
+      background-color: white;
+    }
+
+    .cell__reflex {
+      position: absolute;
+      width: var(--decorative-pixel-size);
+      height: var(--decorative-pixel-size);
+      left: calc(1 * var(--decorative-pixel-size));
+      top: calc(1 * var(--decorative-pixel-size));
+      background-color: white;
+    }
+
+    .cell__reflex:before,
+    .cell__reflex:after {
+      content: ' ';
+      position: absolute;
+      width: var(--decorative-pixel-size);
+      height: var(--decorative-pixel-size);
+      background-color: white;
+    }
+
+    .cell__reflex:before {
+      left: 0;
+      top: calc(1 * var(--decorative-pixel-size));
+    }
+
+    .cell__reflex:after {
+      left: calc(1 * var(--decorative-pixel-size));
+      top: 0;
+    }
+
     .cell-l {
-      background-color: lightcoral;
+      background-color: #38F308;
     }
 
     .cell-j {
-      background-color: lightblue;
+      background-color: #F70100;
     }
 
     .cell-s {
-      background-color: lightgreen;
+      background-color: #00FFFF;
     }
 
     .cell-t {
-      background-color: lightgrey;
+      background-color: #FFDA01;
     }
 
     .cell-z {
-      background-color: lightpink;
+      background-color: #FB09CC;
     }
 
     .cell-o {
-      background-color: lightslategrey;
+      background-color: #5200FF;
     }
 
     .cell-i {
-      background-color: lightseagreen;
+      background-color: #0793F7;
     }
 
     .container {
@@ -60,7 +110,11 @@
     }
 
     .stack {
-      border: 1px solid black;
+      border-bottom: 0;
+      border-right: 0;
+      border-top: var(--decorative-pixel-size) solid black;
+      border-left: var(--decorative-pixel-size) solid black;
+      background-color: black;
     }
 
     .game-state {

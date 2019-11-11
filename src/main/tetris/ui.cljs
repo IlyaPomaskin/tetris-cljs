@@ -9,19 +9,22 @@
 
 (defn cell->class [cell]
   (case cell
-    :l "cell-l"
-    :j "cell-j"
-    :s "cell-s"
-    :t "cell-t"
-    :z "cell-z"
-    :o "cell-o"
-    :i "cell-i"
+    :l "cell-filled cell-l"
+    :j "cell-filled cell-j"
+    :s "cell-filled cell-s"
+    :t "cell-filled cell-t"
+    :z "cell-filled cell-z"
+    :o "cell-filled cell-o"
+    :i "cell-filled cell-i"
     " "))
 
 
 (defn render-stack-cell [cell y x]
   (string/join
-   ["<div class='cell " (cell->class cell) "'></div>"]))
+   ["<div class='cell " (cell->class cell) "'>"
+    (when cell
+      "<div class='cell__reflex'></div>")
+    "</div>"]))
 
 
 (defn render-stack [stack]
