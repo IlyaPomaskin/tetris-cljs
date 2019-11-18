@@ -174,8 +174,7 @@
   (let [{stack :stack
          piece :piece} state
         last-y (->> (range (get piece :y) (count stack))
-                    (reverse)
-                    (filter #(can-place? stack (assoc piece :y %1)))
+                    (filter #(not (can-place? stack (assoc piece :y (+ 1 %1)))))
                     (first))]
     (assoc-in state [:piece :y] last-y)))
 
