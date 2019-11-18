@@ -81,8 +81,8 @@
 
 
 (defn can-place? [stack piece]
-  (or (has-collisions? stack piece)
-      (out-of-bounds? stack piece)))
+  (and (not (has-collisions? stack piece))
+       (not (out-of-bounds? stack piece))))
 
 
 (defn place-piece [state]
@@ -135,8 +135,8 @@
                        (update-in [:x] + x)
                        (update-in [:y] + y))]
     (if (can-place? stack next-piece)
-      state
-      (assoc state :piece next-piece))))
+      (assoc state :piece next-piece)
+      state)))
 
 
 (defn rotate-piece [direction state]
@@ -155,8 +155,8 @@
                        (update-in [:x] + (first offset))
                        (update-in [:y] + (second offset)))]
     (if (can-place? stack next-piece)
-      state
-      (assoc state :piece next-piece))))
+      (assoc state :piece next-piece)
+      state)))
 
 
 (defn drop-piece [state]
