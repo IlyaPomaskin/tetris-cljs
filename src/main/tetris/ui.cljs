@@ -19,7 +19,7 @@
     " "))
 
 
-(defn render-stack-cell [cell y x]
+(defn render-stack-cell [cell]
   (string/join
    ["<div class='cell " (cell->class cell) "'>"
     (when cell
@@ -32,8 +32,8 @@
    "<br/>"
    (vec (for [[stack-y line] (map-indexed vector stack)]
           (string/join
-           (vec (for [[stack-x cell] (map-indexed vector line)]
-                  (render-stack-cell (get-in stack [stack-y stack-x]) stack-y stack-x))))))))
+           (vec (for [[stack-x] (map-indexed vector line)]
+                  (render-stack-cell (get-in stack [stack-y stack-x])))))))))
 
 
 (defn render-game [_ _ _ state]
@@ -42,8 +42,7 @@
 
 
 (defn render-stats [state]
-  (let [{state :state
-         score :score
+  (let [{score :score
          lines :lines} state]
     (string/join
      "<br/>"
