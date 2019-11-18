@@ -139,24 +139,35 @@
       state)))
 
 
+(defn get-wall-kicks [direction piece]
+  (let [rotation (get piece :rotation)
+        i-piece? (= :i (get-in piece [:piece :name]))
+        clockwise? (= direction :clockwise)]
+    (get
+     (case [i-piece? clockwise?]
+       [true true] tetrominoes/wall-kick-i-clockwise
+       [true false] tetrominoes/wall-kick-i-counterclockwise
+       [false true] tetrominoes/wall-kick-clockwise
+       [false false] tetrominoes/wall-kick-counterclockwise)
+     rotation)))
+
+
 (defn rotate-piece [direction state]
   (let [{stack :stack
          piece :piece} state
-        ; TODO counterclockwise rotation
-        wall-kicks (get
-                    (if (= :i (get-in piece [:piece :name]))
-                      tetrominoes/wall-kick-i
-                      tetrominoes/wall-kick)
-                    (get piece :rotation))
-        offset (->> wall-kicks
-                    (filter #(not= (move-piece %1 state) state))
-                    (first))
-        next-piece (-> (rotate direction piece)
-                       (update-in [:x] + (first offset))
-                       (update-in [:y] + (second offset)))]
-    (if (can-place? stack next-piece)
-      (assoc state :piece next-piece)
-      state)))
+        rotated-piece (rotate direction piece)
+        {piece-x :x
+         piece-y :y} rotated-piece
+        wall-kicks (get-wall-kicks direction rotated-piece)
+        next-piece (->> wall-kicks
+                        (map (fn [[kick-x kick-y]]
+                               (assoc rotated-piece
+                                      :x (+ piece-x kick-x)
+                                      :y (- piece-y kick-y))))
+                        (filter (fn [piece] (can-place? stack piece)))
+                        (first)
+                        (#(or %1 piece)))]
+    (assoc state :piece next-piece)))
 
 
 (defn drop-piece [state]
