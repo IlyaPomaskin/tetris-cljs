@@ -42,7 +42,7 @@
      "<br/>"
      [(string/join ["level: " (game/get-level lines)])
       (string/join ["lines: " lines])
-      (string/join ["scoreasdf: " score])])))
+      (string/join ["score: " score])])))
 
 (defn render-state [_ _ _ state]
   (set!

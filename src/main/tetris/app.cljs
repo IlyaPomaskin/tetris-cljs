@@ -5,10 +5,12 @@
 (enable-console-print!)
 
 (def field-width 10)
-(def field-height 16)
+; TODO hide top 2 rows
+(def field-height 22)
 
 (defonce game-state (atom nil))
-(defonce game-timer (atom nil))
+(defonce last-timestamp (atom 0))
+(defonce is-game-over (atom false))
 
 (defn handle-key-press [event]
   (swap!
@@ -22,32 +24,25 @@
        "Space" (game/hard-drop state)
        state))))
 
-(defn game-loop [] (swap! game-state game/fall))
-
-(defn clear-timer! []
-  (swap! game-timer js/clearInterval))
-
-(defn create-timer! [timeout]
-  (reset! game-timer (js/setInterval game-loop timeout)))
-
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
-    (do
-      (clear-timer!)
-      (js/window.removeEventListener "keydown" handle-key-press))))
+    (reset! is-game-over true)
+    (js/window.removeEventListener "keydown" handle-key-press)))
 
-(defn update-speed [_ _ prev-state state]
-  (when (not= (game/get-speed prev-state)
-              (game/get-speed state))
-    (do
-      (clear-timer!)
-      (create-timer! (game/get-speed state)))))
+(defn game-loop! []
+  (let [time-diff (- (js/Date.now) @last-timestamp)
+        next-tick? (> time-diff (game/get-speed @game-state))]
+
+    (when (and (not @is-game-over) next-tick?)
+      (swap! game-state game/fall)
+      (reset! last-timestamp (js/Date.now)))
+
+    (js/requestAnimationFrame game-loop!)))
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
   (add-watch game-state :state ui/render-state)
   (add-watch game-state :game-over check-game-over)
-  (add-watch game-state :speed update-speed)
   (reset! game-state (game/create-game field-width field-height))
-  (create-timer! (game/get-speed @game-state)))
+  (game-loop!))
