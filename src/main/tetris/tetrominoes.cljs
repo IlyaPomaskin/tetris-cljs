@@ -1,6 +1,5 @@
 (ns tetris.tetrominoes)
 
-
 (def l-piece
   {:name :l
    :0 [[1 0 0]
@@ -107,7 +106,6 @@
                 o-piece
                 i-piece])
 
-
 (def wall-kick-0->R
   [[0 0]
    [-1 0]
@@ -132,7 +130,6 @@
    [-1 1]
    [0 -2]
    [-1 -2]])
-
 
 (def wall-kick-R->0
   [[0 0]
@@ -159,7 +156,6 @@
    [0 -2]
    [1 -2]])
 
-
 (def wall-kick-i-0->R
   [[0 0]
    [-2 0]
@@ -184,7 +180,6 @@
    [-2 0]
    [1 2]
    [-2 -1]])
-
 
 (def wall-kick-i-R->0
   [[0 0]
@@ -211,13 +206,11 @@
    [-1 2]
    [2 -1]])
 
-
 (def wall-kick-clockwise
   {:0 wall-kick-0->R
    :r wall-kick-R->2
    :2 wall-kick-2->L
    :l wall-kick-L->0})
-
 
 (def wall-kick-counterclockwise
   {:0 wall-kick-R->0
@@ -225,13 +218,11 @@
    :2 wall-kick-L->2
    :l wall-kick-0->L})
 
-
 (def wall-kick-i-clockwise
   {:0 wall-kick-i-0->R
    :r wall-kick-i-R->2
    :2 wall-kick-i-2->L
    :l wall-kick-i-L->0})
-
 
 (def wall-kick-i-counterclockwise
   {:0 wall-kick-i-R->0

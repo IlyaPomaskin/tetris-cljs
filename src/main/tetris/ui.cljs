@@ -2,10 +2,8 @@
   (:require [clojure.string :as string]
             [tetris.game :as game]))
 
-
 (def stack-container (js/document.querySelector "#stack"))
 (def game-state-container (js/document.querySelector "#game-state"))
-
 
 (defn cell->class [cell]
   (case cell
@@ -18,14 +16,12 @@
     :i "cell-filled cell-i"
     " "))
 
-
 (defn render-stack-cell [cell]
   (string/join
    ["<div class='cell " (cell->class cell) "'>"
     (when cell
       "<div class='cell__reflex'></div>")
     "</div>"]))
-
 
 (defn render-stack [stack]
   (string/join
@@ -35,11 +31,9 @@
            (vec (for [[stack-x] (map-indexed vector line)]
                   (render-stack-cell (get-in stack [stack-y stack-x])))))))))
 
-
 (defn render-game [_ _ _ state]
   (let [stack-with-piece (get (game/place-piece state) :stack)]
     (set! (.-innerHTML stack-container) (render-stack stack-with-piece))))
-
 
 (defn render-stats [state]
   (let [{score :score
@@ -48,8 +42,7 @@
      "<br/>"
      [(string/join ["level: " (game/get-level lines)])
       (string/join ["lines: " lines])
-      (string/join ["score: " score])])))
-
+      (string/join ["scoreasdf: " score])])))
 
 (defn render-state [_ _ _ state]
   (set!

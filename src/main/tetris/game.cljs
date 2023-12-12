@@ -1,15 +1,12 @@
 (ns tetris.game
   (:require [tetris.tetrominoes :as tetrominoes]))
 
-
 (def lines-per-level 20)
 (def base-timer 750)
 (def timer-ms-per-level 50)
 
-
 (defn get-rotated-piece [piece]
   (get-in piece [:piece (get piece :rotation)]))
-
 
 (defn make-piece [piece x]
   (let [piece-width (-> (count (first piece))
@@ -19,7 +16,6 @@
      :rotation :0
      :x (- x piece-width)
      :y 0}))
-
 
 (defn use-next-piece [state]
   (let [{stack :stack
@@ -32,7 +28,6 @@
                          next-buffer))
         (assoc :piece (make-piece piece (/ field-width 2))))))
 
-
 (defn create-game [field-width field-height]
   (use-next-piece
    {:stack (vec (repeat field-height (vec (repeat field-width nil))))
@@ -41,7 +36,6 @@
     :score 0
     :lines 0
     :state :game}))
-
 
 (defn piece->coords [piece]
   (let [{piece-x :x
@@ -54,10 +48,8 @@
           :when (not (zero? (get-in cells [cell-y cell-x])))]
       [stack-y stack-x])))
 
-
 (defn game-over? [state]
   (= (get state :state) :game-over))
-
 
 (defn out-of-bounds? [stack piece]
   (let [stack-height (count stack)
@@ -71,7 +63,6 @@
          (first)
          (some?))))
 
-
 (defn has-collisions? [stack piece]
   (->> (piece->coords piece)
        (map #(get-in stack %1))
@@ -79,11 +70,9 @@
        (first)
        (some?)))
 
-
 (defn can-place? [stack piece]
   (and (not (has-collisions? stack piece))
        (not (out-of-bounds? stack piece))))
-
 
 (defn place-piece [state]
   (let [{stack :stack
@@ -95,14 +84,11 @@
                     (piece->coords piece))]
     (assoc state :stack next-stack)))
 
-
 (defn rotate-clockwise [cells]
   (vec (mapv #(vec (reverse %1)) (apply mapv vector cells))))
 
-
 (defn rotate-counterclockwise [cells]
   (vec (apply mapv vector (mapv #(vec (reverse %1)) cells))))
-
 
 (def rotation-clockwise
   {:0 :r
@@ -110,13 +96,11 @@
    :2 :l
    :l :0})
 
-
 (def rotation-counterclockwise
   {:l :2
    :2 :r
    :r :0
    :0 :l})
-
 
 (defn rotate [direction piece]
   (let [rotation (get piece :rotation)
@@ -127,7 +111,6 @@
         next-rotation (get next-rotations rotation)]
     (assoc piece :rotation next-rotation)))
 
-
 (defn move-piece [[x y] state]
   (let [{stack :stack
          piece :piece} state
@@ -137,7 +120,6 @@
     (if (can-place? stack next-piece)
       (assoc state :piece next-piece)
       state)))
-
 
 (defn get-wall-kicks [direction piece]
   (let [rotation (get piece :rotation)
@@ -150,7 +132,6 @@
        [false true] tetrominoes/wall-kick-clockwise
        [false false] tetrominoes/wall-kick-counterclockwise)
      rotation)))
-
 
 (defn rotate-piece [direction state]
   (let [{stack :stack
@@ -169,7 +150,6 @@
                         (#(or %1 piece)))]
     (assoc state :piece next-piece)))
 
-
 (defn drop-piece [state]
   (let [{stack :stack
          piece :piece} state
@@ -178,16 +158,13 @@
                     (first))]
     (assoc-in state [:piece :y] last-y)))
 
-
 (defn get-level [lines]
   (Math/ceil (/ (+ 1 lines) lines-per-level)))
-
 
 (defn get-speed [state]
   (let [lines (get state :lines)
         level (get-level lines)]
     (- base-timer (* level timer-ms-per-level))))
-
 
 (defn get-score [lines-count level]
   (* level
@@ -197,7 +174,6 @@
        3 300
        4 1200
        0)))
-
 
 (defn remove-filled-lines [state]
   (let [{stack :stack
@@ -215,14 +191,12 @@
         (assoc :lines next-lines)
         (update-in [:score] + score))))
 
-
 (defn check-game-over [state]
   (let [{stack :stack
          piece :piece} state]
     (if (has-collisions? stack piece)
       (assoc state :state :game-over)
       state)))
-
 
 (defn next-piece-cycle [state]
   (-> state
@@ -231,14 +205,12 @@
       (use-next-piece)
       (check-game-over)))
 
-
 (defn fall [state]
   (let [next-state (move-piece [0 1] state)
         moved? (not= state next-state)]
     (if moved?
       next-state
       (next-piece-cycle state))))
-
 
 (defn hard-drop [state]
   (-> state
