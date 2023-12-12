@@ -5,9 +5,11 @@
 
  :dependencies []
 
+ :nrepl {:port 9000}
+
  :builds {:frontend
           {:target :browser
            :modules {:main {:init-fn tetris.app/init}}
            :devtools {:http-root "public"
-                      :http-port 8080
+                      :http-port 3000
                       :hud true}}}}
