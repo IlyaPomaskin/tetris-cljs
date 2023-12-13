@@ -20,7 +20,9 @@
        "ArrowLeft" (game/move-piece [-1 0] state)
        "ArrowRight" (game/move-piece [1 0] state)
        "ArrowUp" (game/rotate-piece :clockwise state)
-       "ArrowDown" (game/rotate-piece :counterclockwise state)
+       "KeyX" (game/rotate-piece :clockwise state)
+       "KeyZ" (game/rotate-piece :counterclockwise state)
+       "ArrowDown" (game/soft-drop state)
        "Space" (game/hard-drop state)
        state))))
 
