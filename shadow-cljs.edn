@@ -5,7 +5,11 @@
 
  :dependencies []
 
- :nrepl {:port 9000}
+ :nrepl {:port 9000
+         :host "0.0.0.0"}
+
+ :socket-repl {:port 9001
+               :host "0.0.0.0"}
 
  :builds {:frontend
           {:target :browser
