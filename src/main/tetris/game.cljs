@@ -150,13 +150,16 @@
                         (#(or %1 piece)))]
     (assoc state :piece next-piece)))
 
-(defn drop-piece [state]
+(defn get-lowest-y [state]
   (let [{stack :stack
          piece :piece} state
         last-y (->> (range (get piece :y) (count stack))
                     (filter #(not (can-place? stack (assoc piece :y (+ 1 %1)))))
                     (first))]
-    (assoc-in state [:piece :y] last-y)))
+    last-y))
+
+(defn drop-piece [state]
+  (assoc-in state [:piece :y] (get-lowest-y state)))
 
 (defn get-level [lines]
   (Math/ceil (/ (+ 1 lines) lines-per-level)))
@@ -197,6 +200,18 @@
     (if (has-collisions? stack piece)
       (assoc state :state :game-over)
       state)))
+
+(defn place-ghost-piece [state]
+  (let [{stack :stack
+         piece :piece} state
+        ghost-piece (-> piece
+                        (assoc :y (get-lowest-y (update-in state [:piece :y] inc)))
+                        (assoc-in [:piece :name] :g))
+        next-stack (reduce
+                    (fn [stack [y x]] (assoc-in stack [y x] :g))
+                    stack
+                    (piece->coords ghost-piece))]
+    (assoc state :stack next-stack)))
 
 (defn next-piece-cycle [state]
   (-> state

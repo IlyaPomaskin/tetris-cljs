@@ -14,6 +14,7 @@
     :z "cell-filled cell-z"
     :o "cell-filled cell-o"
     :i "cell-filled cell-i"
+    :g "cell-filled cell-ghost"
     " "))
 
 (defn render-stack-cell [cell]
@@ -34,8 +35,8 @@
             "</div>"))))))
 
 (defn render-game [_ _ _ state]
-  (let [stack-with-piece (get (game/place-piece state) :stack)]
-    (set! (.-innerHTML stack-container) (render-stack stack-with-piece))))
+  (let [next-state (game/place-ghost-piece (game/place-piece state))]
+    (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))))
 
 (defn render-stats [state]
   (let [{score :score

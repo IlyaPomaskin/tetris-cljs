@@ -105,13 +105,19 @@
        [0 7 0 0]
        [0 7 0 0]]})
 
-(def srs-items [l-piece
-                j-piece
-                s-piece
-                t-piece
-                z-piece
-                o-piece
-                i-piece])
+(def items [l-piece
+            j-piece
+            s-piece
+            t-piece
+            z-piece
+            o-piece
+            i-piece])
+
+(def safe-first-items [l-piece
+                       j-piece
+                       t-piece
+                       o-piece
+                       i-piece])
 
 (defn invert-wall-kicks [list]
   (mapv
