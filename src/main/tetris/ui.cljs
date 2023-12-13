@@ -25,11 +25,13 @@
 
 (defn render-stack [stack]
   (string/join
-   "<br/>"
    (vec (for [[stack-y line] (map-indexed vector stack)]
           (string/join
-           (vec (for [[stack-x] (map-indexed vector line)]
-                  (render-stack-cell (get-in stack [stack-y stack-x])))))))))
+           (concat
+            "<div class='row'>"
+            (vec (for [[stack-x] (map-indexed vector line)]
+                   (render-stack-cell (get-in stack [stack-y stack-x]))))
+            "</div>"))))))
 
 (defn render-game [_ _ _ state]
   (let [stack-with-piece (get (game/place-piece state) :stack)]
