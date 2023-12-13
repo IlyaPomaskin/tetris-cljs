@@ -98,6 +98,11 @@ body {
   white-space: nowrap;
 }
 
+.row:nth-child(1),
+.row:nth-child(2) {
+  opacity: 0.2;
+}
+
 .container {
   height: 100%;
   display: flex;
