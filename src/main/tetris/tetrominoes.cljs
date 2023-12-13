@@ -113,105 +113,75 @@
                 o-piece
                 i-piece])
 
+(defn invert-wall-kicks [list]
+  (mapv
+   (fn [pair]
+     (mapv #(* -1 %) pair))
+   list))
+
 (def wall-kick-0->R
   [[0 0]
    [-1 0]
-   [-1 -1]
-   [0 2]
-   [-1 2]])
+   [-1 1]
+   [0 -2]
+   [-1 -2]])
+(def wall-kick-R->0 (invert-wall-kicks wall-kick-0->R))
+
 (def wall-kick-R->2
   [[0 0]
    [1 0]
-   [1 1]
-   [0 -2]
-   [1 -2]])
+   [1 -1]
+   [0 2]
+   [1 2]])
+(def wall-kick-2->R (invert-wall-kicks wall-kick-R->2))
+
 (def wall-kick-2->L
   [[0 0]
    [1 0]
-   [1 -1]
-   [0 2]
-   [1 2]])
-(def wall-kick-L->0
-  [[0 0]
-   [-1 0]
-   [-1 1]
+   [1 1]
    [0 -2]
-   [-1 -2]])
+   [1 -2]])
+(def wall-kick-L->2 (invert-wall-kicks wall-kick-2->L))
 
-(def wall-kick-R->0
-  [[0 0]
-   [1 0]
-   [1 -1]
-   [0 2]
-   [1 2]])
-(def wall-kick-2->R
-  [[0 0]
-   [-1 0]
-   [-1 1]
-   [0 -2]
-   [-1 -2]])
-(def wall-kick-L->2
+(def wall-kick-L->0
   [[0 0]
    [-1 0]
    [-1 -1]
    [0 2]
    [-1 2]])
-(def wall-kick-0->L
-  [[0 0]
-   [1 0]
-   [1 1]
-   [0 -2]
-   [1 -2]])
+(def wall-kick-0->L (invert-wall-kicks wall-kick-L->0))
 
 (def wall-kick-i-0->R
   [[0 0]
    [-2 0]
    [1 0]
-   [-2 1]
-   [1 -2]])
-(def wall-kick-i-R->2
-  [[0 0]
-   [-1 0]
-   [2 0]
-   [-1 -2]
-   [2 1]])
-(def wall-kick-i-2->L
-  [[0 0]
-   [2 0]
-   [-1 0]
-   [2 -1]
-   [-1 2]])
-(def wall-kick-i-L->0
-  [[0 0]
-   [1 0]
-   [-2 0]
-   [1 2]
-   [-2 -1]])
-
-(def wall-kick-i-R->0
-  [[0 0]
-   [2 0]
-   [-1 0]
-   [2 1]
-   [-1 -2]])
-(def wall-kick-i-2->R
-  [[0 0]
-   [1 0]
-   [-2 0]
-   [1 -2]
-   [-2 1]])
-(def wall-kick-i-L->2
-  [[0 0]
-   [-2 0]
-   [1 0]
    [-2 -1]
    [1 2]])
-(def wall-kick-i-0->L
+(def wall-kick-i-R->0 (invert-wall-kicks wall-kick-i-0->R))
+
+(def wall-kick-i-R->2
   [[0 0]
    [-1 0]
    [2 0]
    [-1 2]
    [2 -1]])
+(def wall-kick-i-2->R (invert-wall-kicks wall-kick-i-R->2))
+
+(def wall-kick-i-2->L
+  [[0 0]
+   [2 0]
+   [-1 0]
+   [2 1]
+   [-1 -2]])
+(def wall-kick-i-L->2 (invert-wall-kicks wall-kick-i-2->L))
+
+(def wall-kick-i-L->0
+  [[0 0]
+   [1 0]
+   [-2 0]
+   [1 -2]
+   [-2 1]])
+(def wall-kick-i-0->L (invert-wall-kicks wall-kick-i-L->0))
 
 (def wall-kick-clockwise
   {:0 wall-kick-0->R
