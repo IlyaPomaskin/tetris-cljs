@@ -1,0 +1,119 @@
+:root {
+  --decorative-pixel-size: 3px;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+.cell {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 30px;
+  border: 1px solid rgba(10, 10, 10, 0.05);
+  box-sizing: border-box;
+}
+
+.cell-filled {
+  border-bottom: var(--decorative-pixel-size) solid black;
+  border-right: var(--decorative-pixel-size) solid black;
+  border-top: 0;
+  border-left: 0;
+}
+
+.cell-filled:before {
+  position: absolute;
+  content: " ";
+  display: block;
+  left: 0;
+  top: 0;
+  width: var(--decorative-pixel-size);
+  height: var(--decorative-pixel-size);
+  background-color: white;
+}
+
+.cell__reflex {
+  position: absolute;
+  width: var(--decorative-pixel-size);
+  height: var(--decorative-pixel-size);
+  left: calc(1 * var(--decorative-pixel-size));
+  top: calc(1 * var(--decorative-pixel-size));
+  background-color: white;
+}
+
+.cell__reflex:before,
+.cell__reflex:after {
+  content: " ";
+  position: absolute;
+  width: var(--decorative-pixel-size);
+  height: var(--decorative-pixel-size);
+  background-color: white;
+}
+
+.cell__reflex:before {
+  left: 0;
+  top: calc(1 * var(--decorative-pixel-size));
+}
+
+.cell__reflex:after {
+  left: calc(1 * var(--decorative-pixel-size));
+  top: 0;
+}
+
+.cell-l {
+  background-color: #38f308;
+}
+
+.cell-j {
+  background-color: #f70100;
+}
+
+.cell-s {
+  background-color: #00ffff;
+}
+
+.cell-t {
+  background-color: #ffda01;
+}
+
+.cell-z {
+  background-color: #fb09cc;
+}
+
+.cell-o {
+  background-color: #5200ff;
+}
+
+.cell-i {
+  background-color: #0793f7;
+}
+
+.row {
+  white-space: nowrap;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.stack {
+  border-bottom: 0;
+  border-right: 0;
+  border-top: var(--decorative-pixel-size) solid black;
+  border-left: var(--decorative-pixel-size) solid black;
+  background-color: black;
+}
+
+.game-state {
+  text-align: center;
+}
