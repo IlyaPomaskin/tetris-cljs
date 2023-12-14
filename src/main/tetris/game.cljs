@@ -210,7 +210,7 @@
 (defn place-ghost-piece [state]
   (let [{stack :stack
          piece :piece} state
-        lowest-y (get-lowest-y (update-in state [:piece :y] inc))
+        lowest-y (get-lowest-y state)
         ghost-piece (-> piece
                         (assoc :y lowest-y)
                         (assoc-in [:piece :name] :g))
@@ -233,6 +233,9 @@
     (if moved?
       next-state
       (next-piece-cycle state))))
+
+(defn soft-drop [state]
+  state)
 
 (defn hard-drop [state]
   (-> state
