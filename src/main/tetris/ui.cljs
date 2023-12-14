@@ -3,6 +3,7 @@
             [tetris.game :as game]))
 
 (def stack-container (js/document.querySelector "#stack"))
+(def next-pieces-container (js/document.querySelector "#next-pieces"))
 (def game-state-container (js/document.querySelector "#game-state"))
 
 (defn cell->class [cell]
@@ -34,9 +35,23 @@
                    (render-stack-cell (get-in stack [stack-y stack-x]))))
             "</div>"))))))
 
+(defn render-next-pieces [buffer]
+  (let [stack (vec (repeat 22 (vec (repeat 6 nil))))
+
+        buffer-on-bg
+        (reduce
+         (fn [state [index piece]]
+           (let [next-piece (game/make-piece piece 1 (inc (* index 4)))]
+             (game/place-piece
+              (assoc state :piece next-piece))))
+         {:stack stack}
+         (map-indexed (fn [index item] [index item]) (take 5 buffer)))]
+    (render-stack (:stack buffer-on-bg))))
+
 (defn render-game [_ _ _ state]
-  (let [next-state (game/place-ghost-piece (game/place-piece state))]
-    (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))))
+  (let [next-state (game/place-piece (game/place-ghost-piece state))]
+    (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))
+    (set! (.-innerHTML next-pieces-container) (render-next-pieces (:buffer next-state)))))
 
 (defn render-stats [state]
   (let [{score :score

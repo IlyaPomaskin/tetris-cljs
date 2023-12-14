@@ -94,13 +94,12 @@ body {
   background-color: #0793f7;
 }
 
-.row {
-  white-space: nowrap;
+.cell-ghost {
+  border: 1px solid rgba(10, 10, 10, 0.4);
 }
 
-.row:nth-child(1),
-.row:nth-child(2) {
-  opacity: 0.2;
+.row {
+  white-space: nowrap;
 }
 
 .container {
@@ -111,11 +110,27 @@ body {
   align-items: center;
 }
 
+.stacks-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
 .stack {
   border-bottom: 0;
   border-right: 0;
   border-top: var(--decorative-pixel-size) solid black;
   border-left: var(--decorative-pixel-size) solid black;
+  background-color: black;
+}
+
+.stack > div:nth-child(1),
+.stack > div:nth-child(2) {
+  opacity: 0.2;
+}
+
+.next-pieces {
   background-color: black;
 }
 

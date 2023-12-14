@@ -8,14 +8,17 @@
 (defn get-rotated-piece [piece]
   (get-in piece [:piece (get piece :rotation)]))
 
-(defn make-piece [piece x]
-  (let [piece-width (-> (count (first piece))
-                        (/ 2)
-                        (Math/floor))]
-    {:piece piece
-     :rotation :0
-     :x (- x piece-width)
-     :y 0}))
+(defn make-piece
+  ([piece x]
+   (let [piece-width (count (nth (:0 piece) 0))
+         piece-half-width (Math/floor (/ 2 piece-width))
+         next-x (- x piece-half-width)]
+     (make-piece piece next-x 0)))
+  ([piece x y]
+   {:piece piece
+    :rotation :0
+    :x x
+    :y y}))
 
 (defn use-next-piece [state]
   (let [{stack :stack
@@ -23,16 +26,19 @@
         field-width (count (first stack))
         [[piece] next-buffer] (split-at 1 buffer)]
     (-> state
-        (assoc :buffer (if (empty? next-buffer)
-                         (shuffle tetrominoes/srs-items)
+        (assoc :buffer (if (<= (count next-buffer) 7)
+                         (concat next-buffer (shuffle tetrominoes/items))
                          next-buffer))
+        ; Move one cell down if nothing in the way
         (assoc :piece (make-piece piece (/ field-width 2))))))
 
 (defn create-game [field-width field-height]
   (use-next-piece
    {:stack (vec (repeat field-height (vec (repeat field-width nil))))
     :piece nil
-    :buffer (shuffle tetrominoes/srs-items)
+    :buffer (concat [(rand-nth tetrominoes/safe-first-items)]
+                    (shuffle tetrominoes/items)
+                    (shuffle tetrominoes/items))
     :score 0
     :lines 0
     :state :game}))
@@ -204,8 +210,9 @@
 (defn place-ghost-piece [state]
   (let [{stack :stack
          piece :piece} state
+        lowest-y (get-lowest-y (update-in state [:piece :y] inc))
         ghost-piece (-> piece
-                        (assoc :y (get-lowest-y (update-in state [:piece :y] inc)))
+                        (assoc :y lowest-y)
                         (assoc-in [:piece :name] :g))
         next-stack (reduce
                     (fn [stack [y x]] (assoc-in stack [y x] :g))
