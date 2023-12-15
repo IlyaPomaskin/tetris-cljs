@@ -1,10 +1,13 @@
 (ns tetris.ui
   (:require [clojure.string :as string]
-            [tetris.game :as game]))
+            [tetris.game :as game]
+            [tetris.utils :as utils]))
 
 (def stack-container (js/document.querySelector "#stack"))
 (def next-pieces-container (js/document.querySelector "#next-pieces"))
 (def game-state-container (js/document.querySelector "#game-state"))
+(def canvas (js/document.querySelector "#canvas"))
+(def ctx (.getContext canvas "2d"))
 
 (defn cell->class [cell]
   (case cell
@@ -35,6 +38,35 @@
                    (render-stack-cell (get-in stack [stack-y stack-x]))))
             "</div>"))))))
 
+(defn cell->color [cell]
+  (case cell
+    :l "#f0a000"
+    :j "#0000f0"
+    :s "#00f000"
+    :t "#a000f0"
+    :z "#f00000"
+    :o "#f0f000"
+    :i "#0793f7"
+    :g "rgba(255, 255, 255, 0.3)"
+    "black"))
+
+(def cell-size 20)
+
+(defn set-color! [color]
+  (set! (.-fillStyle ctx) color))
+
+(defn draw-rect! [x y w h]
+  (.fillRect ctx x y w h))
+
+(defn c-render-cell [x y piece]
+  (set-color! (cell->color piece))
+  (draw-rect! (* y cell-size) (* x cell-size) cell-size cell-size))
+
+(defn render-stack-canvas [stack]
+  (set-color! "black")
+  (draw-rect! 0 0 (* (count (nth stack 0)) cell-size) (* (count stack) cell-size))
+  (utils/iterate-stack stack c-render-cell))
+
 (defn render-next-pieces [buffer]
   (let [stack (vec (repeat 22 (vec (repeat 6 nil))))
 
@@ -50,7 +82,8 @@
 
 (defn render-game [_ _ _ state]
   (let [next-state (game/place-piece (game/place-ghost-piece state))]
-    (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))
+    ; (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))
+    (render-stack-canvas (:stack next-state))
     (set! (.-innerHTML next-pieces-container) (render-next-pieces (:buffer next-state)))))
 
 (defn render-stats [state]
