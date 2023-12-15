@@ -9,7 +9,7 @@
 (def field-height 22)
 
 (defonce game-state (atom nil))
-(defonce last-timestamp (atom 0))
+(defonce prev-timestamp (atom 0))
 (defonce is-game-over (atom false))
 
 (defn handle-key-press [event]
@@ -31,15 +31,16 @@
     (reset! is-game-over true)
     (js/window.removeEventListener "keydown" handle-key-press)))
 
-(defn game-loop! []
-  (let [time-diff (- (js/Date.now) @last-timestamp)
-        next-tick? (> time-diff (game/get-speed @game-state))]
+(defn game-loop! [timestamp]
+  (let [diff (- timestamp @prev-timestamp)
+        next-tick? (> diff (game/get-speed @game-state))]
 
-    (when (and (not @is-game-over) next-tick?)
+    (when next-tick?
       (swap! game-state game/fall)
-      (reset! last-timestamp (js/Date.now)))
+      (reset! prev-timestamp timestamp))
 
-    (js/requestAnimationFrame game-loop!)))
+    (when (not @is-game-over)
+      (js/requestAnimationFrame game-loop!))))
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
@@ -47,4 +48,4 @@
   (add-watch game-state :state ui/render-state)
   (add-watch game-state :game-over check-game-over)
   (reset! game-state (game/create-game field-width field-height))
-  (game-loop!))
+  (js/requestAnimationFrame game-loop!))
