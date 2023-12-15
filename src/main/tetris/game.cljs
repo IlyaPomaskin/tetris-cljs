@@ -30,7 +30,7 @@
                          (concat next-buffer (shuffle tetrominoes/items))
                          next-buffer))
         ; Move one cell down if nothing in the way
-        (assoc :piece (make-piece piece (/ field-width 2))))))
+        (assoc :piece (make-piece piece (dec (/ field-width 2)))))))
 
 (defn create-game [field-width field-height]
   (use-next-piece
@@ -235,7 +235,8 @@
       (next-piece-cycle state))))
 
 (defn soft-drop [state]
-  state)
+  ; Set soft-drop flag. Increase speed while flag active
+  (fall state))
 
 (defn hard-drop [state]
   (-> state
