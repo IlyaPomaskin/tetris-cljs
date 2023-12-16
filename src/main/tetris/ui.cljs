@@ -86,18 +86,17 @@
   (set! (.-strokeStyle ctx) "white")
   (set! (.-fillStyle ctx) "white")
 
-  (set! (.-font ctx) (clojure.string/join ["bold " size "px sans-serif"]))
+  (set! (.-font ctx) (string/join ["bold " size "px sans-serif"]))
   (.fillText ctx text x y))
 
 (defn render-stats [state]
   (let [{score :score
          lines :lines} state]
-
-    (render-text! 220 300 (string/join ["level: " (game/get-level lines)]) 12)
-    (render-text! 220 320 (string/join ["lines: " lines]) 12)
-    (render-text! 220 340 (string/join ["score: " score]) 12)
+    (render-text! 210 300 (string/join ["level: " (game/get-level lines)]) 10)
+    (render-text! 210 314 (string/join ["lines: " lines]) 10)
+    (render-text! 210 328 (string/join ["score: " score]) 10)
     (when (= (get state :state) :game-over)
-      (render-text! 220 380 "Game over" 10))))
+      (render-text! 208 386 "Game over" 12))))
 
 (defn render-game [_ _ _ state]
   (let [next-state (game/place-piece (game/place-ghost-piece state))]
