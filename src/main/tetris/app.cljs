@@ -4,48 +4,47 @@
 
 (enable-console-print!)
 
-(def field-width 10)
-; TODO hide top 2 rows
-(def field-height 22)
-
 (defonce game-state (atom nil))
 (defonce prev-timestamp (atom 0))
-(defonce is-game-over (atom false))
 
 (defn handle-key-press [event]
-  (swap!
-   game-state
-   (fn [state]
-     (case (.-code event)
-       "ArrowLeft" (game/move-piece [-1 0] state)
-       "ArrowRight" (game/move-piece [1 0] state)
-       "ArrowUp" (game/rotate-piece :clockwise state)
-       "KeyX" (game/rotate-piece :clockwise state)
-       "KeyZ" (game/rotate-piece :counterclockwise state)
-       "ArrowDown" (game/soft-drop state)
-       "Space" (game/hard-drop state)
-       state))))
+  (when (not (game/game-over? @game-state))
+    (swap!
+     game-state
+     (fn [state]
+       (case (.-code event)
+         "ArrowLeft" (game/move-piece! [-1 0] state)
+         "ArrowRight" (game/move-piece! [1 0] state)
+         "ArrowUp" (game/rotate-piece :clockwise state)
+         "KeyX" (game/rotate-piece :clockwise state)
+         "KeyZ" (game/rotate-piece :counterclockwise state)
+         "ArrowDown" (game/soft-drop state)
+         "Space" (game/hard-drop state)
+         state))))
+  (ui/render-game nil nil nil @game-state))
 
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
-    (reset! is-game-over true)
     (js/window.removeEventListener "keydown" handle-key-press)))
 
 (defn game-loop! [timestamp]
   (let [diff (- timestamp @prev-timestamp)
-        next-tick? (> diff (game/get-speed @game-state))]
+        state @game-state
+        next-tick? (> diff (game/get-speed state))]
 
-    (when next-tick?
+    (ui/render-game nil nil nil state)
+
+    (when (and next-tick?
+               (not (game/game-over? state)))
       (swap! game-state game/fall)
-      (reset! prev-timestamp timestamp))
+      (reset! prev-timestamp timestamp)
+      (ui/render-game nil nil nil state))
 
-    (when (not @is-game-over)
-      (js/requestAnimationFrame game-loop!))))
+    (js/requestAnimationFrame game-loop!)))
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
-  (add-watch game-state :state ui/render-state)
   (add-watch game-state :game-over check-game-over)
-  (reset! game-state (game/create-game field-width field-height))
+  (reset! game-state (game/create-game))
   (js/requestAnimationFrame game-loop!))
