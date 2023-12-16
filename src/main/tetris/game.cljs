@@ -1,5 +1,10 @@
 (ns tetris.game
-  (:require [tetris.tetrominoes :as tetrominoes]))
+  (:require
+   [tetris.tetrominoes :as tetrominoes]
+   [tetris.utils :as utils]))
+
+(def field-width 10)
+(def field-height 22)
 
 (def lines-per-level 20)
 (def base-timer 750)
@@ -8,10 +13,12 @@
 (defn get-rotated-piece [piece]
   (get-in piece [:piece (get piece :rotation)]))
 
+(defn get-piece-width [piece]
+  (count (nth (:0 piece) 0)))
+
 (defn make-piece
   ([piece x]
-   (let [piece-width (count (nth (:0 piece) 0))
-         piece-half-width (Math/floor (/ 2 piece-width))
+   (let [piece-half-width (Math/floor (/ 2 (get-piece-width piece)))
          next-x (- x piece-half-width)]
      (make-piece piece next-x 0)))
   ([piece x y]
@@ -20,7 +27,7 @@
     :x x
     :y y}))
 
-(defn use-next-piece [state]
+(defn use-next-piece! [state]
   (let [{stack :stack
          buffer :buffer} state
         field-width (count (first stack))
@@ -32,8 +39,8 @@
         ; Move one cell down if nothing in the way
         (assoc :piece (make-piece piece (dec (/ field-width 2)))))))
 
-(defn create-game [field-width field-height]
-  (use-next-piece
+(defn create-game []
+  (use-next-piece!
    {:stack (vec (repeat field-height (vec (repeat field-width nil))))
     :piece nil
     :buffer (concat [(rand-nth tetrominoes/safe-first-items)]
@@ -117,7 +124,9 @@
         next-rotation (get next-rotations rotation)]
     (assoc piece :rotation next-rotation)))
 
-(defn move-piece [[x y] state]
+; https://shaunlebron.github.io/t3tr0s-slides/#18
+
+(defn move-piece! [[x y] state]
   (let [{stack :stack
          piece :piece} state
         next-piece (-> piece
@@ -187,9 +196,7 @@
 (defn remove-filled-lines [state]
   (let [{stack :stack
          lines :lines} state
-        field-height (count stack)
-        field-width (count (first stack))
-        stack-wo-lines (filterv #(not-every? some? %1) stack)
+        stack-wo-lines (filterv #(not (utils/filled-line? %)) stack)
         removed-lines-count (- field-height (count stack-wo-lines))
         new-empty-lines (vec (repeat removed-lines-count (vec (repeat field-width nil))))
         next-stack (into [] (concat new-empty-lines stack-wo-lines))
@@ -198,12 +205,15 @@
     (-> state
         (assoc :stack next-stack)
         (assoc :lines next-lines)
-        (update-in [:score] + score))))
+        (update :score + score))))
 
 (defn check-game-over [state]
-  (let [{stack :stack
-         piece :piece} state]
-    (if (has-collisions? stack piece)
+  (let [{stack :stack} state
+        first-lines-has-items?
+        (->> stack
+             (take 2)
+             (some #(not (utils/empty-line? %))))]
+    (if first-lines-has-items?
       (assoc state :state :game-over)
       state)))
 
@@ -224,11 +234,11 @@
   (-> state
       (place-piece)
       (remove-filled-lines)
-      (use-next-piece)
+      (use-next-piece!)
       (check-game-over)))
 
 (defn fall [state]
-  (let [next-state (move-piece [0 1] state)
+  (let [next-state (move-piece! [0 1] state)
         moved? (not= state next-state)]
     (if moved?
       next-state
