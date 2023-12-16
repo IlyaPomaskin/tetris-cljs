@@ -83,29 +83,21 @@
      "white")))
 
 (defn render-text! [x y text size]
-  (set! ctx (.-font "bold 48px serif"))
-  (.strokeText ctx "Hello world" 50 100))
+  (set! (.-strokeStyle ctx) "white")
+  (set! (.-fillStyle ctx) "white")
 
-(defn render-stats-context [state])
+  (set! (.-font ctx) (clojure.string/join ["bold " size "px sans-serif"]))
+  (.fillText ctx text x y))
 
 (defn render-stats [state]
   (let [{score :score
          lines :lines} state]
-    (string/join
-     "<br/>"
-     [(string/join ["level: " (game/get-level lines)])
-      (string/join ["lines: " lines])
-      (string/join ["score: " score])])))
 
-(defn render-state [_ _ _ state]
-  (set!
-   (.-innerHTML game-state-container)
-   (string/join
-    "<br/>"
-    [(when (= (get state :state) :game-over)
-       "Game over")
-     ; (render-text! 1 1 1 1)
-     (render-stats state)])))
+    (render-text! 220 300 (string/join ["level: " (game/get-level lines)]) 12)
+    (render-text! 220 320 (string/join ["lines: " lines]) 12)
+    (render-text! 220 340 (string/join ["score: " score]) 12)
+    (when (= (get state :state) :game-over)
+      (render-text! 220 380 "Game over" 10))))
 
 (defn render-game [_ _ _ state]
   (let [next-state (game/place-piece (game/place-ghost-piece state))]
@@ -113,4 +105,4 @@
     (render-stack (:stack next-state))
     (draw-inner-border! 0 0 canvas-width canvas-height "blue")
     (render-next-pieces (:buffer next-state))
-    (render-state nil nil nil state)))
+    (render-stats state)))
