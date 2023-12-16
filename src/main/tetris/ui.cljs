@@ -3,40 +3,17 @@
             [tetris.game :as game]
             [tetris.utils :as utils]))
 
-(def stack-container (js/document.querySelector "#stack"))
-(def next-pieces-container (js/document.querySelector "#next-pieces"))
 (def game-state-container (js/document.querySelector "#game-state"))
 (def canvas (js/document.querySelector "#canvas"))
 (def ctx (.getContext canvas "2d"))
 
-(defn cell->class [cell]
-  (case cell
-    :l "cell-filled cell-l"
-    :j "cell-filled cell-j"
-    :s "cell-filled cell-s"
-    :t "cell-filled cell-t"
-    :z "cell-filled cell-z"
-    :o "cell-filled cell-o"
-    :i "cell-filled cell-i"
-    :g "cell-filled cell-ghost"
-    " "))
+(def cell-size 20)
 
-(defn render-stack-cell [cell]
-  (string/join
-   ["<div class='cell " (cell->class cell) "'>"
-    (when cell
-      "<div class='cell__reflex'></div>")
-    "</div>"]))
+(def canvas-width (.-width canvas))
+(def canvas-height (.-height canvas))
 
-(defn render-stack [stack]
-  (string/join
-   (vec (for [[stack-y line] (map-indexed vector stack)]
-          (string/join
-           (concat
-            "<div class='row'>"
-            (vec (for [[stack-x] (map-indexed vector line)]
-                   (render-stack-cell (get-in stack [stack-y stack-x]))))
-            "</div>"))))))
+(def field-width (* 10 cell-size))
+(def field-height (* 22 cell-size))
 
 (defn cell->color [cell]
   (case cell
@@ -50,41 +27,66 @@
     :g "rgba(255, 255, 255, 0.3)"
     "black"))
 
-(def cell-size 20)
+(defn draw-border! [x y w h color]
+  (set! (.-strokeStyle ctx) color)
+  (.strokeRect ctx x y w h))
 
-(defn set-color! [color]
-  (set! (.-fillStyle ctx) color))
+(defn draw-inner-border! [x y w h color]
+  (draw-border! (inc x) (inc y) (dec w) (dec h) color))
 
-(defn draw-rect! [x y w h]
+(defn draw-rect! [x y w h color]
+  (set! (.-fillStyle ctx) color)
   (.fillRect ctx x y w h))
 
-(defn c-render-cell [x y piece]
-  (set-color! (cell->color piece))
-  (draw-rect! (* y cell-size) (* x cell-size) cell-size cell-size))
+(defn c-render-cell
+  ([x y piece]
+   (c-render-cell x y piece cell-size))
 
-(defn render-stack-canvas [stack]
-  (set-color! "black")
-  (draw-rect! 0 0 (* (count (nth stack 0)) cell-size) (* (count stack) cell-size))
-  (utils/iterate-stack stack c-render-cell))
+  ([x y piece size]
+   (when piece
+     (draw-rect! (* x size) (* y size) size size (cell->color piece))
+     (draw-border! (* x size) (* y size) size size "black"))))
+
+(defn render-stack [stack]
+  (utils/iterate-stack
+   stack
+   (fn [x y]
+     (draw-border!
+      (* x cell-size) (* y cell-size)
+      cell-size cell-size
+      "white")))
+  (draw-rect! 0 0 canvas-width canvas-height "rgba(0, 0, 0, 0.8)")
+  (utils/iterate-stack stack c-render-cell)
+  (draw-inner-border! 0 (* 2 cell-size) field-width (- field-height (* 2 cell-size)) "green"))
 
 (defn render-next-pieces [buffer]
-  (let [stack (vec (repeat 22 (vec (repeat 6 nil))))
+  (let [next-piece-cell-size 10]
+    (dorun
+     (map-indexed
+      (fn [item-index item]
+        (dorun
+         (map
+          (fn [[x y]]
+            (c-render-cell
+             (+ x 3 game/field-width next-piece-cell-size)
+             (+ y 2 (* 5 item-index))
+             (:name item) next-piece-cell-size))
 
-        buffer-on-bg
-        (reduce
-         (fn [state [index piece]]
-           (let [next-piece (game/make-piece piece 1 (inc (* index 4)))]
-             (game/place-piece
-              (assoc state :piece next-piece))))
-         {:stack stack}
-         (map-indexed (fn [index item] [index item]) (take 5 buffer)))]
-    (render-stack (:stack buffer-on-bg))))
+          (game/piece->coords (game/make-piece item 0)))))
+      (take 5 buffer)))
 
-(defn render-game [_ _ _ state]
-  (let [next-state (game/place-piece (game/place-ghost-piece state))]
-    ; (set! (.-innerHTML stack-container) (render-stack (:stack next-state)))
-    (render-stack-canvas (:stack next-state))
-    (set! (.-innerHTML next-pieces-container) (render-next-pieces (:buffer next-state)))))
+    (draw-inner-border!
+     (* cell-size game/field-width)
+     0
+     (* cell-size 4)
+     (* cell-size 14)
+     "white")))
+
+(defn render-text! [x y text size]
+  (set! ctx (.-font "bold 48px serif"))
+  (.strokeText ctx "Hello world" 50 100))
+
+(defn render-stats-context [state])
 
 (defn render-stats [state]
   (let [{score :score
@@ -102,4 +104,13 @@
     "<br/>"
     [(when (= (get state :state) :game-over)
        "Game over")
+     ; (render-text! 1 1 1 1)
      (render-stats state)])))
+
+(defn render-game [_ _ _ state]
+  (let [next-state (game/place-piece (game/place-ghost-piece state))]
+    (.clearRect ctx 0 0 canvas-width canvas-height)
+    (render-stack (:stack next-state))
+    (draw-inner-border! 0 0 canvas-width canvas-height "blue")
+    (render-next-pieces (:buffer next-state))
+    (render-state nil nil nil state)))
