@@ -14,3 +14,8 @@ body {
 
   gap: 16px;
 }
+
+.randomize-buttons {
+  display: flex;
+  gap: 8px;
+}

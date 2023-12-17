@@ -50,6 +50,16 @@
    (.blur new-game-button)
    (reset! game-state (game/create-game))))
 
+(doall
+ (for [btn (js/document.querySelectorAll ".random-fill")]
+   (.addEventListener
+    btn
+    "click"
+    #(let [lines (int (.-lines (.-dataset btn)))
+           density (float (.-density (.-dataset btn)))]
+       (swap! game-state update :stack game/random-fill lines density)
+       (.blur btn)))))
+
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)

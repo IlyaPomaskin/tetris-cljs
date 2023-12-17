@@ -252,3 +252,16 @@
   (-> state
       (drop-piece)
       (next-piece-cycle)))
+
+(defn random-fill [stack lines density]
+  (println lines density)
+  (vec
+   (map-indexed
+    (fn [index line]
+      (mapv
+       (fn [_]
+         (if (and (>= index (- field-height lines))
+                  (>= (rand) (- 1 density)))
+           :j nil))
+       line))
+    stack)))
