@@ -55,9 +55,11 @@
    (.addEventListener
     btn
     "click"
-    #(let [lines (int (.-lines (.-dataset btn)))
-           density (float (.-density (.-dataset btn)))]
-       (swap! game-state update :stack game/random-fill lines density)
+    #(let [dataset (.-dataset btn)
+           lines (int (.-lines dataset))
+           density (float (.-density dataset))]
+       (reset! game-state (-> (game/create-game)
+                              (update :stack game/random-fill lines density)))
        (.blur btn)))))
 
 (defn init []
