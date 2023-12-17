@@ -42,6 +42,14 @@
 
     (js/requestAnimationFrame game-loop!)))
 
+(def new-game-button (js/document.querySelector "#new-game"))
+(.addEventListener
+ new-game-button
+ "click"
+ (fn []
+   (.blur new-game-button)
+   (reset! game-state (game/create-game))))
+
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
   (add-watch game-state :render ui/render-game)
