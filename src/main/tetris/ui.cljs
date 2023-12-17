@@ -7,8 +7,6 @@
 (def canvas (js/document.querySelector "#canvas"))
 (def ctx (.getContext canvas "2d"))
 
-(set! (.-imageSmoothingEnabled ctx) false)
-
 (def cell-size 20)
 (def next-piece-cell-size 10)
 
@@ -36,7 +34,7 @@
     :o "#faff00"
     ; cyan
     :i "#1be7ff"
-    :g "rgba(255, 255, 255, 0.3)"
+    :g "rgba(255, 255, 255, 0.2)"
     black))
 
 (defn draw-text! [x y size text]
@@ -61,54 +59,26 @@
   (set! (.-fillStyle ctx) color)
   (.fillRect ctx x y w h))
 
-(defn draw-line! [x1 y1 x2 y2 color]
-  (set! (.-strokeStyle ctx) color)
-  (.beginPath ctx)
-  (.moveTo ctx x1 y1)
-  (.lineTo ctx x2 y2)
-  (.stroke ctx))
-
 (defn draw-cell!
   ([x y piece]
    (draw-cell! x y piece cell-size))
 
   ([x y piece size]
-; (set! (.-shadowBlur ctx) 0)
-; (set! (.-shadowColor ctx) "transparent")
-
-; (set! (.-filter ctx) "drop-shadow(4px 3px 4px #000000 ) ")
-   (set! (.-filter ctx) "none")
-
    (when piece
      (let [x' (* x size)
            y' (* y size)]
        (draw-rect! x' y' size size (cell->color piece))
-
-       (draw-rect! (+ 1 x') (+ 2 y') (- size 0) (- size 0) "rgba(0,0,0,0.2)")
-
-       ; (draw-line! (inc x') y' x' (+ y' size) "rgba(255,255,255,0.8)")
-       ; (draw-line! x' (inc y') (+ x' size) y' "rgba(255,255,255,0.8)")
-       ; (draw-line! (+ x' -1  size) y' (+ x' -1 size) (+ y' size) "rgba(0,0,0,0.3)")
-
-       ; (draw-line! (inc x') y' x' (+ y' size) "white")
-       ; (draw-line! x' (inc y') (+ x' size) y' "white")
-       ; (draw-line! (+ x' size) y' (+ x' size) y' "red")
-
-       ; (draw-rect! x' y' 2 2 "white")
-       ; (draw-rect! (+ x' 2) (+ y' 2) 2 2 "white")
-       ; (draw-rect! (+ x' 2) (+ y' 4) 2 2 "white")
-       ; (draw-rect! (+ x' 4) (+ y' 2) 2 2 "white")
-
-       (draw-border! x' y' size size "rgba(0,0,0,0.2)")))))
+       (draw-rect! (+ 1 x') (+ 2 y') (- size 0) (- size 0) "rgba(0, 0, 0, 0.2)")
+       (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))
 
 (defn render-stack [stack]
+  (draw-rect! 0 0 canvas-width canvas-height black)
   (utils/iterate-stack
    stack
    (fn [x y]
-     (draw-border! (* x cell-size) (* y cell-size) cell-size cell-size "white")))
-  (draw-rect! 0 0 canvas-width canvas-height black)
-  (utils/iterate-stack stack draw-cell!)
-  (draw-inner-border! 0 (* 2 cell-size) field-width (- field-height (* 2 cell-size)) "green"))
+     (draw-border! (* x cell-size) (* y cell-size) cell-size cell-size "rgba(255, 255, 255, 0.05)")))
+  (utils/iterate-stack stack (fn [x y piece] (draw-cell! x (- y 2) piece)))
+  (draw-inner-border! 0 0 field-width (- field-height (* 2 cell-size)) "white"))
 
 (defn render-next-pieces [buffer]
   (->> buffer
@@ -146,7 +116,6 @@
 
 (defn render-game [_ _ _ state]
   (let [next-state (game/place-piece (game/place-ghost-piece state))]
-    ; (.clearRect ctx 0 0 canvas-width canvas-height)
     (draw-rect! 0 0 canvas-width canvas-height black)
     (render-stack (:stack next-state))
     (render-next-pieces (:buffer next-state))
