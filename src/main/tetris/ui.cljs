@@ -107,14 +107,18 @@
 (defn render-stats [state]
   (let [{score :score
          lines :lines} state
-        offset-y 200]
+        offset-y 200
+        game-over? (= (:state state) :game-over)
+        pause? (:pause? state)]
     (draw-text! 210 offset-y 10 (string/join ["level: " (game/get-level lines)]))
     (draw-text! 210 (+ offset-y 14) 10 (string/join ["lines: " lines]))
     (draw-text! 210 (+ offset-y 28) 10 (string/join ["score: " score]))
-    (when (= (get state :state) :game-over)
+    (when (and pause? (not game-over?))
+      (draw-text! 218 (+ offset-y 120) 12 "Pause"))
+    (when game-over?
       (draw-text! 208 (+ offset-y 120) 12 "Game over"))))
 
-(defn render-game [_ _ _ state]
+(defn render-game [state]
   (let [next-state (game/place-piece (game/place-ghost-piece state))]
     (draw-rect! 0 0 canvas-width canvas-height black)
     (render-stack (:stack next-state))

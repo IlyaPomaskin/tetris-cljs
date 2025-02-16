@@ -39,16 +39,36 @@
         ; Move one cell down if nothing in the way
         (assoc :piece (make-piece piece (dec (/ field-width 2)))))))
 
-(defn create-game []
-  (use-next-piece!
-   {:stack (vec (repeat field-height (vec (repeat field-width nil))))
-    :piece nil
-    :buffer (concat [(rand-nth tetrominoes/safe-first-items)]
-                    (shuffle tetrominoes/items)
-                    (shuffle tetrominoes/items))
-    :score 0
-    :lines 0
-    :state :game}))
+(defn random-fill [stack lines density]
+  (vec
+   (map-indexed
+    (fn [index line]
+      (mapv
+       (fn [_]
+         (if (and (>= index (- field-height lines))
+                  (>= (rand) (- 1 density)))
+           :j nil))
+       line))
+    stack)))
+
+(defn create-game
+  ([]
+   (create-game 0 0))
+
+  ([fill-lines fill-density]
+   (use-next-piece!
+    {:stack (random-fill
+             (vec (repeat field-height (vec (repeat field-width nil))))
+             fill-lines
+             fill-density)
+     :piece nil
+     :buffer (concat [(rand-nth tetrominoes/safe-first-items)]
+                     (shuffle tetrominoes/items)
+                     (shuffle tetrominoes/items))
+     :score 0
+     :lines 0
+     :pause? false
+     :state :game})))
 
 (defn piece->coords [piece]
   (let [{piece-x :x
@@ -252,16 +272,3 @@
   (-> state
       (drop-piece)
       (next-piece-cycle)))
-
-(defn random-fill [stack lines density]
-  (println lines density)
-  (vec
-   (map-indexed
-    (fn [index line]
-      (mapv
-       (fn [_]
-         (if (and (>= index (- field-height lines))
-                  (>= (rand) (- 1 density)))
-           :j nil))
-       line))
-    stack)))

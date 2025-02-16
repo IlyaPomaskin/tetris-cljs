@@ -1,4 +1,4 @@
-(ns tetris.app
+(ns main.tetris
   (:require [tetris.game :as game]
             [tetris.ui :as ui]))
 
@@ -21,26 +21,27 @@
          "ArrowDown" (game/soft-drop state)
          "Space" (game/hard-drop state)
          state))))
-  (ui/render-game nil nil nil @game-state))
+  (ui/render-game @game-state))
 
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
     (js/window.removeEventListener "keydown" handle-key-press)))
 
 (defn game-loop! [timestamp]
-  (let [diff (- timestamp @prev-timestamp)
-        state @game-state
-        next-tick? (> diff (game/get-speed state))]
+  (when-not (:pause? @game-state)
+    (let [diff (- timestamp @prev-timestamp)
+          state @game-state
+          next-tick? (> diff (game/get-speed state))]
 
-    (ui/render-game nil nil nil state)
+      (ui/render-game state)
 
-    (when (and next-tick?
-               (not (game/game-over? state)))
-      (swap! game-state game/fall)
-      (reset! prev-timestamp timestamp)
-      (ui/render-game nil nil nil state))
+      (when (and next-tick?
+                 (not (game/game-over? state)))
+        (swap! game-state game/fall)
+        (reset! prev-timestamp timestamp)
+        (ui/render-game state))
 
-    (js/requestAnimationFrame game-loop!)))
+      (js/requestAnimationFrame game-loop!))))
 
 (def new-game-button (js/document.querySelector "#new-game"))
 (.addEventListener
@@ -55,16 +56,24 @@
    (.addEventListener
     btn
     "click"
-    #(let [dataset (.-dataset btn)
+    #(let [^js dataset (.-dataset btn)
            lines (int (.-lines dataset))
            density (float (.-density dataset))]
-       (reset! game-state (-> (game/create-game)
-                              (update :stack game/random-fill lines density)))
+       (reset! game-state (game/create-game lines density))
        (.blur btn)))))
+
+(.addEventListener
+ js/window
+ "focus"
+ (fn []
+   (swap! game-state assoc :pause? false)
+   (js/requestAnimationFrame game-loop!)))
+
+(.addEventListener js/window "blur" (fn [] (swap! game-state assoc :pause? true)))
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
-  (add-watch game-state :render ui/render-game)
+  (add-watch game-state :render (fn [_ _ _ state] (ui/render-game state)))
   (add-watch game-state :game-over check-game-over)
   (reset! game-state (game/create-game))
   (js/requestAnimationFrame game-loop!))
