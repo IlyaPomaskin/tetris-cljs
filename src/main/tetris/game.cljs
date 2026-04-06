@@ -20,7 +20,7 @@
   ([piece x]
    (let [piece-half-width (Math/floor (/ 2 (get-piece-width piece)))
          next-x (- x piece-half-width)]
-     (make-piece piece next-x 0)))
+     (make-piece piece next-x -1)))
   ([piece x y]
    {:piece piece
     :rotation :0
