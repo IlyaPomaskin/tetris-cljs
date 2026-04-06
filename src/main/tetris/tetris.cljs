@@ -42,7 +42,7 @@
              "KeyX" (game/rotate-piece :clockwise state)
              "KeyZ" (game/rotate-piece :counterclockwise state)
              "ArrowDown" (game/soft-drop state)
-             state))))))
+             state)))))))
 
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)

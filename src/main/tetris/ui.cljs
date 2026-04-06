@@ -62,23 +62,6 @@
   (set! (.-fillStyle ctx) color)
   (.fillRect ctx x y w h))
 
-(defn draw-cell!
-  ([x y piece]
-   (draw-cell! x y piece cell-size))
-
-  ([x y piece size]
-   (when piece
-     (let [x' (* x size)
-           y' (* y size)]
-       (if (= @ui-mode :noise)
-         (do
-           (.drawImage ctx (noise-cell-at x y) x' y')
-           (draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
-         (do
-           (draw-rect! x' y' size size (cell->color piece))
-           (draw-rect! (+ 1 x') (+ 2 y') size size "rgba(0, 0, 0, 0.2)")
-           (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))))
-
 (defn generate-noise [w h]
   (let [image-data (.createImageData ctx w h)
         data (.-data image-data)]
@@ -105,6 +88,23 @@
 
 (defn noise-cell-at [x y]
   (nth noise-cells (mod (+ (* x 7) (* y 13)) 100)))
+
+(defn draw-cell!
+  ([x y piece]
+   (draw-cell! x y piece cell-size))
+
+  ([x y piece size]
+   (when piece
+     (let [x' (* x size)
+           y' (* y size)]
+       (if (= @ui-mode :noise)
+         (do
+           (.drawImage ctx (noise-cell-at x y) x' y')
+           (draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
+         (do
+           (draw-rect! x' y' size size (cell->color piece))
+           (draw-rect! (+ 1 x') (+ 2 y') size size "rgba(0, 0, 0, 0.2)")
+           (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))))
 
 (def bounce-duration 300)
 (def bounce-amplitude 8)
@@ -204,15 +204,14 @@
               y' (js/Math.round (+ (* (- y 2) cell-size) y-offset))
               local-x (- x piece-x)
               local-y (- y piece-y)]
-          (when (>= y' 0)
-            (if noise?
-              (do
-                (.drawImage ctx (noise-cell-at local-x local-y) x' y')
-                (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
-              (do
-                (draw-rect! x' y' cell-size cell-size (cell->color name))
-                (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
-                (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))))
+          (if noise?
+            (do
+              (.drawImage ctx (noise-cell-at local-x local-y) x' y')
+              (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
+            (do
+              (draw-rect! x' y' cell-size cell-size (cell->color name))
+              (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
+              (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)"))))))
     (.restore ctx)))
 
 (defn render-game [state & [{:keys [y-offset bounce-offset clearing-rows clear-progress]}]]
