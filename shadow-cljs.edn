@@ -13,7 +13,7 @@
 
  :builds {:frontend
           {:target :browser
-           :modules {:main {:init-fn tetris.app/init}}
+           :modules {:main {:init-fn tetris.tetris/init}}
            :devtools {:http-root "public"
                       :http-port 3000
                       :hud true}}}}
