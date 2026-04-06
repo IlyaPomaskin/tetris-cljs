@@ -42,13 +42,13 @@
 (defn random-fill [stack lines density]
   (vec
    (map-indexed
-    (fn [index line]
-      (mapv
-       (fn [_]
-         (if (and (>= index (- field-height lines))
+    (fn [y line]
+      (vec (map-indexed
+       (fn [x _]
+         (if (and (>= y (- field-height lines))
                   (>= (rand) (- 1 density)))
-           :j nil))
-       line))
+           {:type :j :noise (mod (+ (* x 7) (* y 13)) 100)} nil))
+       line)))
     stack)))
 
 (defn create-game
@@ -116,8 +116,14 @@
   (let [{stack :stack
          piece :piece} state
         piece-symbol (get-in piece [:piece :name])
+        piece-x (:x piece)
+        piece-y (:y piece)
         next-stack (reduce
-                    (fn [stack [y x]] (assoc-in stack [y x] piece-symbol))
+                    (fn [stack [y x]]
+                      (let [local-x (- x piece-x)
+                            local-y (- y piece-y)
+                            noise-idx (mod (+ (* local-x 7) (* local-y 13)) 100)]
+                        (assoc-in stack [y x] {:type piece-symbol :noise noise-idx})))
                     stack
                     (piece->coords piece))]
     (assoc state :stack next-stack)))
@@ -250,7 +256,7 @@
                         (assoc :y lowest-y)
                         (assoc-in [:piece :name] :g))
         next-stack (reduce
-                    (fn [stack [y x]] (assoc-in stack [y x] :g))
+                    (fn [stack [y x]] (assoc-in stack [y x] {:type :g :noise 0}))
                     stack
                     (piece->coords ghost-piece))]
     (assoc state :stack next-stack)))

@@ -9,5 +9,5 @@
 
 (defn empty-line? [line] (every? nil? line))
 
-(defn filled-line? [line] (every? keyword? line))
+(defn filled-line? [line] (every? some? line))
 

@@ -86,8 +86,11 @@
 
 (def noise-cells (vec (repeatedly 100 #(image-data->canvas (generate-noise cell-size cell-size)))))
 
+(defn noise-index [x y]
+  (mod (+ (* x 7) (* y 13)) 100))
+
 (defn noise-cell-at [x y]
-  (nth noise-cells (mod (+ (* x 7) (* y 13)) 100)))
+  (nth noise-cells (noise-index x y)))
 
 (defn draw-cell!
   ([x y piece]
@@ -134,18 +137,18 @@
     (.clip ctx)
     (utils/iterate-stack
      stack
-     (fn [x y piece]
-       (when piece
+     (fn [x y cell]
+       (when cell
          (let [clearing? (and noise? (contains? clearing-set y))
                x-offset (if clearing? (* (- clear-progress) field-width) 0)
                x' (+ (* x cell-size) x-offset)
                y' (+ (* (- y 2) cell-size) (if clearing? 0 bounce-offset))]
            (if noise?
-             (do
-               (.drawImage ctx (noise-cell-at x y) x' y')
+             (let [idx (if (map? cell) (:noise cell) (noise-index x y))]
+               (.drawImage ctx (nth noise-cells idx) x' y')
                (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
-             (do
-               (draw-rect! x' y' cell-size cell-size (cell->color piece))
+             (let [color (if (map? cell) (:type cell) cell)]
+               (draw-rect! x' y' cell-size cell-size (cell->color color))
                (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
                (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))))
     (.restore ctx)
@@ -189,7 +192,7 @@
     (when game-over?
       (draw-text! 208 (+ offset-y 120) 12 "Game over"))))
 
-(defn render-piece [piece y-offset]
+(defn render-piece [piece y-offset bounce-offset]
   (let [coords (game/piece->coords piece)
         name (get-in piece [:piece :name])
         stack-h (- field-height (* 2 cell-size))
@@ -202,7 +205,7 @@
           piece-y (:y piece)]
       (doseq [[y x] coords]
         (let [x' (* x cell-size)
-              y' (js/Math.round (+ (* (- y 2) cell-size) y-offset))
+              y' (js/Math.round (+ (* (- y 2) cell-size) y-offset bounce-offset))
               local-x (- x piece-x)
               local-y (- y piece-y)]
           (if noise?
@@ -221,7 +224,7 @@
     (draw-rect! 0 0 canvas-width canvas-height black)
     (render-stack (:stack state) bounce-offset clearing-rows clear-progress)
     (when (:piece state)
-      (render-piece (:piece state) y-offset))
+      (render-piece (:piece state) y-offset bounce-offset))
     (when (not= @ui-mode :noise)
       (render-next-pieces (:buffer state)))
     (render-stats state)

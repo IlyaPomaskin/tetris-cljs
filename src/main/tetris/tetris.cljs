@@ -23,15 +23,17 @@
         (reset! pre-clear-state placed)
         (reset! game-state placed))
       (do
-        (reset! bounce-start timestamp)
         (reset! game-state (game/continue-after-clear placed))))))
 
 (defn handle-key-press [event]
+  (when (contains? #{"ArrowUp" "ArrowDown" "ArrowLeft" "ArrowRight" "Space"} (.-code event))
+    (.preventDefault event))
   (when (not (game/game-over? @game-state))
     (if (= (.-code event) "Space")
-      (do
+      (let [now (js/performance.now)]
         (swap! game-state game/hard-drop)
-        (lock-piece! (js/performance.now)))
+        (reset! bounce-start now)
+        (lock-piece! now))
       (do
         (swap!
          game-state
