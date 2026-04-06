@@ -111,8 +111,13 @@
 (def toggle-noise-checkbox (js/document.querySelector "#toggle-noise"))
 (.addEventListener
  toggle-noise-checkbox
+ "keydown"
+ (fn [e] (.preventDefault e)))
+(.addEventListener
+ toggle-noise-checkbox
  "change"
  (fn []
+   (.blur toggle-noise-checkbox)
    (reset! ui/ui-mode (if (.-checked toggle-noise-checkbox) :noise :classic))))
 
 (doall

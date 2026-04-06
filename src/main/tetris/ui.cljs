@@ -224,6 +224,7 @@
     (render-stack (:stack state) bounce-offset clearing-rows clear-progress)
     (when (:piece state)
       (render-piece (:piece state) y-offset))
-    (render-next-pieces (:buffer state))
+    (when (not= @ui-mode :noise)
+      (render-next-pieces (:buffer state)))
     (render-stats state)
     (draw-inner-border! 0 0 canvas-width canvas-height "white")))
