@@ -14,8 +14,9 @@
 
 (defn lock-piece! [timestamp]
   (let [placed (game/place-only @game-state)
-        filled (game/get-filled-rows (:stack placed))]
-    (if (seq filled)
+        filled (game/get-filled-rows (:stack placed))
+        noise? (= @ui/ui-mode :noise)]
+    (if (and noise? (seq filled))
       (do
         (reset! clearing-rows filled)
         (reset! clear-start timestamp)
@@ -109,6 +110,7 @@
    (reset! game-state (game/create-game))))
 
 (def toggle-noise-checkbox (js/document.querySelector "#toggle-noise"))
+(set! (.-checked toggle-noise-checkbox) (= @ui/ui-mode :noise))
 (.addEventListener
  toggle-noise-checkbox
  "keydown"
@@ -118,7 +120,9 @@
  "change"
  (fn []
    (.blur toggle-noise-checkbox)
-   (reset! ui/ui-mode (if (.-checked toggle-noise-checkbox) :noise :classic))))
+   (let [noise? (.-checked toggle-noise-checkbox)]
+     (reset! ui/ui-mode (if noise? :noise :classic))
+     (set! (.-hash js/location) (if noise? "noise" "")))))
 
 (doall
  (for [btn (array-seq (js/document.querySelectorAll ".random-fill"))]

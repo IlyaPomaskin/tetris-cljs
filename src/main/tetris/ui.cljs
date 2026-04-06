@@ -19,7 +19,7 @@
 
 (def black "black")
 
-(defonce ui-mode (atom :noise))
+(defonce ui-mode (atom (if (= (.-hash js/location) "#noise") :noise :classic)))
 
 (defn cell->color [cell]
   (case cell
@@ -100,7 +100,8 @@
        (if (= @ui-mode :noise)
          (do
            (.drawImage ctx (noise-cell-at x y) x' y')
-           (draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
+           #_(draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
+           
          (do
            (draw-rect! x' y' size size (cell->color piece))
            (draw-rect! (+ 1 x') (+ 2 y') size size "rgba(0, 0, 0, 0.2)")
@@ -135,7 +136,7 @@
      stack
      (fn [x y piece]
        (when piece
-         (let [clearing? (contains? clearing-set y)
+         (let [clearing? (and noise? (contains? clearing-set y))
                x-offset (if clearing? (* (- clear-progress) field-width) 0)
                x' (+ (* x cell-size) x-offset)
                y' (+ (* (- y 2) cell-size) (if clearing? 0 bounce-offset))]
@@ -205,9 +206,7 @@
               local-x (- x piece-x)
               local-y (- y piece-y)]
           (if noise?
-            (do
-              (.drawImage ctx (noise-cell-at local-x local-y) x' y')
-              (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
+             (.drawImage ctx (noise-cell-at local-x local-y) x' y')
             (do
               (draw-rect! x' y' cell-size cell-size (cell->color name))
               (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
