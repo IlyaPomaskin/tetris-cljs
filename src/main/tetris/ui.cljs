@@ -18,6 +18,8 @@
 
 (def black "black")
 
+(defonce ui-mode (atom :noise))
+
 (defn cell->color [cell]
   (case cell
     ; orange
@@ -67,18 +69,74 @@
    (when piece
      (let [x' (* x size)
            y' (* y size)]
-       (draw-rect! x' y' size size (cell->color piece))
-       (draw-rect! (+ 1 x') (+ 2 y') (- size 0) (- size 0) "rgba(0, 0, 0, 0.2)")
-       (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))
+       (if (= @ui-mode :noise)
+         (do
+           (.putImageData ctx (noise-cell-at x y) x' y')
+           (draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
+         (do
+           (draw-rect! x' y' size size (cell->color piece))
+           (draw-rect! (+ 1 x') (+ 2 y') size size "rgba(0, 0, 0, 0.2)")
+           (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))))
 
-(defn render-stack [stack]
-  (draw-rect! 0 0 canvas-width canvas-height black)
-  (utils/iterate-stack
-   stack
-   (fn [x y]
-     (draw-border! (* x cell-size) (* y cell-size) cell-size cell-size "rgba(255, 255, 255, 0.05)")))
-  (utils/iterate-stack stack (fn [x y piece] (draw-cell! x (- y 2) piece)))
-  (draw-inner-border! 0 0 field-width (- field-height (* 2 cell-size)) "white"))
+(defn generate-noise [w h]
+  (let [image-data (.createImageData ctx w h)
+        data (.-data image-data)]
+    (loop [i 0]
+      (when (< i (.-length data))
+        (let [v (if (> (js/Math.random) 0.5) 255 0)]
+          (aset data i v)
+          (aset data (+ i 1) v)
+          (aset data (+ i 2) v)
+          (aset data (+ i 3) 255))
+        (recur (+ i 4))))
+    image-data))
+
+(def noise-image (generate-noise field-width (- (* 22 cell-size) (* 2 cell-size))))
+
+(def noise-cells (vec (repeatedly 100 #(generate-noise cell-size cell-size))))
+
+(defn noise-cell-at [x y]
+  (nth noise-cells (mod (+ (* x 7) (* y 13)) 100)))
+
+(def bounce-duration 300)
+(def bounce-amplitude 8)
+
+(defn calc-bounce-offset [elapsed]
+  (if (or (not= @ui-mode :noise) (<= elapsed 0) (>= elapsed bounce-duration))
+    0
+    (let [t (/ elapsed bounce-duration)]
+      (* bounce-amplitude (js/Math.sin (* t js/Math.PI))))))
+
+(defn render-stack [stack bounce-offset]
+  (let [stack-h (- field-height (* 2 cell-size))
+        noise? (= @ui-mode :noise)]
+    (draw-rect! 0 0 canvas-width canvas-height black)
+    (when noise?
+      (.putImageData ctx noise-image 0 0))
+    (utils/iterate-stack
+     stack
+     (fn [x y]
+       (draw-border! (* x cell-size) (* y cell-size) cell-size cell-size "rgba(255, 255, 255, 0.05)")))
+    (.save ctx)
+    (.beginPath ctx)
+    (.rect ctx 0 0 field-width stack-h)
+    (.clip ctx)
+    (utils/iterate-stack
+     stack
+     (fn [x y piece]
+       (when piece
+         (let [x' (* x cell-size)
+               y' (+ (* (- y 2) cell-size) bounce-offset)]
+           (if noise?
+             (do
+               (.putImageData ctx (noise-cell-at x y) x' y')
+               (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
+             (do
+               (draw-rect! x' y' cell-size cell-size (cell->color piece))
+               (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
+               (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))))
+    (.restore ctx)
+    (draw-inner-border! 0 0 field-width stack-h "white")))
 
 (defn render-next-pieces [buffer]
   (->> buffer
@@ -118,10 +176,41 @@
     (when game-over?
       (draw-text! 208 (+ offset-y 120) 12 "Game over"))))
 
-(defn render-game [state]
-  (let [next-state (game/place-piece (game/place-ghost-piece state))]
+(defn render-piece [piece y-offset]
+  (let [coords (game/piece->coords piece)
+        name (get-in piece [:piece :name])
+        stack-h (- field-height (* 2 cell-size))
+        noise? (= @ui-mode :noise)]
+    (.save ctx)
+    (.beginPath ctx)
+    (.rect ctx 0 0 field-width stack-h)
+    (.clip ctx)
+    (let [piece-x (:x piece)
+          piece-y (:y piece)]
+      (doseq [[y x] coords]
+        (let [x' (* x cell-size)
+              y' (+ (* (- y 2) cell-size) y-offset)
+              local-x (- x piece-x)
+              local-y (- y piece-y)]
+          (when (>= y' 0)
+            (if noise?
+              (do
+                (.putImageData ctx (noise-cell-at local-x local-y) x' y')
+                (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
+              (do
+                (draw-rect! x' y' cell-size cell-size (cell->color name))
+                (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
+                (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))))
+    (.restore ctx)))
+
+(defn render-game [state & [{:keys [y-offset bounce-offset]}]]
+  (let [y-offset (or y-offset 0)
+        bounce-offset (or bounce-offset 0)
+]
     (draw-rect! 0 0 canvas-width canvas-height black)
-    (render-stack (:stack next-state))
-    (render-next-pieces (:buffer next-state))
+    (render-stack (:stack state) bounce-offset)
+    (when (:piece state)
+      (render-piece (:piece state) y-offset))
+    (render-next-pieces (:buffer state))
     (render-stats state)
     (draw-inner-border! 0 0 canvas-width canvas-height "white")))

@@ -15,6 +15,10 @@ body {
   gap: 16px;
 }
 
+.container label {
+  color: white;
+}
+
 .randomize-buttons {
   display: flex;
   gap: 8px;

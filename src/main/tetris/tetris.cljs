@@ -1,4 +1,4 @@
-(ns main.tetris
+(ns tetris.tetris
   (:require [tetris.game :as game]
             [tetris.ui :as ui]))
 
@@ -6,9 +6,13 @@
 
 (defonce game-state (atom nil))
 (defonce prev-timestamp (atom 0))
+(defonce bounce-start (atom 0))
+(defonce was-falling (atom true))
 
 (defn handle-key-press [event]
   (when (not (game/game-over? @game-state))
+    (when (= (.-code event) "Space")
+      (reset! bounce-start (js/performance.now)))
     (swap!
      game-state
      (fn [state]
@@ -31,15 +35,30 @@
   (when-not (:pause? @game-state)
     (let [diff (- timestamp @prev-timestamp)
           state @game-state
-          next-tick? (> diff (game/get-speed state))]
+          speed (game/get-speed state)
+          next-tick? (> diff speed)]
 
-      (ui/render-game state)
+      (let [can-fall? (game/can-fall? state)]
+        (when (and @was-falling (not can-fall?))
+          (reset! bounce-start timestamp))
+        (reset! was-falling can-fall?)
 
-      (when (and next-tick?
+        (if (and next-tick?
                  (not (game/game-over? state)))
-        (swap! game-state game/fall)
-        (reset! prev-timestamp timestamp)
-        (ui/render-game state))
+          (do
+            (swap! game-state game/fall)
+            (reset! prev-timestamp timestamp)
+            (let [bounce-elapsed (- timestamp @bounce-start)
+                  bounce-offset (ui/calc-bounce-offset bounce-elapsed)]
+              (ui/render-game @game-state {:bounce-offset bounce-offset})))
+          (let [progress (/ diff speed)
+                y-offset (if can-fall?
+                           (* progress ui/cell-size)
+                           0)
+                bounce-elapsed (- timestamp @bounce-start)
+                bounce-offset (ui/calc-bounce-offset bounce-elapsed)]
+            (ui/render-game state {:y-offset y-offset
+                                   :bounce-offset bounce-offset}))))
 
       (js/requestAnimationFrame game-loop!))))
 
@@ -51,8 +70,15 @@
    (.blur new-game-button)
    (reset! game-state (game/create-game))))
 
+(def toggle-noise-checkbox (js/document.querySelector "#toggle-noise"))
+(.addEventListener
+ toggle-noise-checkbox
+ "change"
+ (fn []
+   (reset! ui/ui-mode (if (.-checked toggle-noise-checkbox) :noise :classic))))
+
 (doall
- (for [btn (js/document.querySelectorAll ".random-fill")]
+ (for [btn (array-seq (js/document.querySelectorAll ".random-fill"))]
    (.addEventListener
     btn
     "click"
@@ -73,7 +99,6 @@
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
-  (add-watch game-state :render (fn [_ _ _ state] (ui/render-game state)))
   (add-watch game-state :game-over check-game-over)
   (reset! game-state (game/create-game))
   (js/requestAnimationFrame game-loop!))

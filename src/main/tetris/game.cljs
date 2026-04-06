@@ -107,6 +107,11 @@
   (and (not (has-collisions? stack piece))
        (not (out-of-bounds? stack piece))))
 
+(defn can-fall? [state]
+  (let [{:keys [stack piece]} state]
+    (when piece
+      (can-place? stack (update piece :y inc)))))
+
 (defn place-piece [state]
   (let [{stack :stack
          piece :piece} state
