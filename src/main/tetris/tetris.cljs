@@ -11,7 +11,17 @@
 (defonce clear-start (atom 0))
 (defonce clearing-rows (atom []))
 (defonce soft-dropping (atom false))
+(defonce x-anim-start (atom 0))
+(defonce x-anim-direction (atom 0))
 (defonce pre-clear-state (atom nil))
+
+(def x-anim-duration 80)
+
+(defn calc-x-offset [timestamp]
+  (let [elapsed (- timestamp @x-anim-start)]
+    (if (< elapsed x-anim-duration)
+      (* @x-anim-direction ui/cell-size (- 1.0 (/ elapsed x-anim-duration)))
+      0)))
 
 (def soft-drop-speed 50)
 
@@ -44,7 +54,7 @@
         (swap! game-state game/hard-drop)
         (reset! bounce-start now)
         (lock-piece! now))
-      (do
+      (let [old-x (get-in @game-state [:piece :x])]
         (swap!
          game-state
          (fn [state]
@@ -60,7 +70,11 @@
                              (game/get-speed state) soft-drop-speed)
                             (reset! soft-dropping true))
                           state)
-             state)))))))
+             state)))
+        (let [new-x (get-in @game-state [:piece :x])]
+          (when (not= old-x new-x)
+            (reset! x-anim-direction (- old-x new-x))
+            (reset! x-anim-start (js/performance.now))))))))
 
 (defn handle-key-up [event]
   (when (and (= (.-code event) "ArrowDown") @soft-dropping)
@@ -112,16 +126,20 @@
                 (swap! game-state game/fall))
               (reset! prev-timestamp timestamp)
               (let [bounce-elapsed (- timestamp @bounce-start)
-                    bounce-offset (ui/calc-bounce-offset bounce-elapsed)]
-                (ui/render-game @game-state {:bounce-offset bounce-offset})))
+                    bounce-offset (ui/calc-bounce-offset bounce-elapsed)
+                    x-offset (calc-x-offset timestamp)]
+                (ui/render-game @game-state {:bounce-offset bounce-offset
+                                             :x-offset x-offset})))
             (let [progress (min 1.0 (/ diff speed))
                   y-offset (if can-fall?
                              (* progress ui/cell-size)
                              0)
                   bounce-elapsed (- timestamp @bounce-start)
-                  bounce-offset (ui/calc-bounce-offset bounce-elapsed)]
+                  bounce-offset (ui/calc-bounce-offset bounce-elapsed)
+                  x-offset (calc-x-offset timestamp)]
               (ui/render-game state {:y-offset y-offset
-                                     :bounce-offset bounce-offset}))))))
+                                     :bounce-offset bounce-offset
+                                     :x-offset x-offset}))))))
 
     (js/requestAnimationFrame game-loop!)))
 

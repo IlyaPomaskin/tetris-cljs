@@ -192,7 +192,7 @@
     (when game-over?
       (draw-text! 208 (+ offset-y 120) 12 "Game over"))))
 
-(defn render-piece [piece y-offset bounce-offset]
+(defn render-piece [piece y-offset x-offset bounce-offset]
   (let [coords (game/piece->coords piece)
         name (get-in piece [:piece :name])
         stack-h (- field-height (* 2 cell-size))
@@ -205,7 +205,7 @@
           piece-y (:y piece)]
       (doall (map-indexed
         (fn [i [y x]]
-          (let [x' (* x cell-size)
+          (let [x' (js/Math.round (+ (* x cell-size) x-offset))
                 y' (js/Math.round (+ (* (- y 2) cell-size) y-offset bounce-offset))
                 local-x (- x piece-x)
                 local-y (- y piece-y)
@@ -219,15 +219,16 @@
         coords)))
     (.restore ctx)))
 
-(defn render-game [state & [{:keys [y-offset bounce-offset clearing-rows clear-progress]}]]
+(defn render-game [state & [{:keys [y-offset x-offset bounce-offset clearing-rows clear-progress]}]]
   (let [y-offset (or y-offset 0)
+        x-offset (or x-offset 0)
         bounce-offset (or bounce-offset 0)
         clearing-rows (or clearing-rows [])
         clear-progress (or clear-progress 0)]
     (draw-rect! 0 0 canvas-width canvas-height black)
     (render-stack (:stack state) bounce-offset clearing-rows clear-progress)
     (when (:piece state)
-      (render-piece (:piece state) y-offset bounce-offset))
+      (render-piece (:piece state) y-offset x-offset bounce-offset))
     (when (not= @ui-mode :noise)
       (render-next-pieces (:buffer state)))
     (render-stats state)
