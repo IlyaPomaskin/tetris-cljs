@@ -10,7 +10,17 @@
 (defonce was-falling (atom true))
 (defonce clear-start (atom 0))
 (defonce clearing-rows (atom []))
+(defonce soft-dropping (atom false))
 (defonce pre-clear-state (atom nil))
+
+(def soft-drop-speed 50)
+
+(defn adjust-timestamp-for-speed-change! [old-speed new-speed]
+  (let [now (js/performance.now)
+        diff (- now @prev-timestamp)
+        progress (min 1.0 (/ diff old-speed))
+        new-diff (* progress new-speed)]
+    (reset! prev-timestamp (- now new-diff))))
 
 (defn lock-piece! [timestamp]
   (let [placed (game/place-only @game-state)
@@ -44,8 +54,19 @@
              "ArrowUp" (game/rotate-piece :clockwise state)
              "KeyX" (game/rotate-piece :clockwise state)
              "KeyZ" (game/rotate-piece :counterclockwise state)
-             "ArrowDown" (game/soft-drop state)
+             "ArrowDown" (do
+                          (when (not @soft-dropping)
+                            (adjust-timestamp-for-speed-change!
+                             (game/get-speed state) soft-drop-speed)
+                            (reset! soft-dropping true))
+                          state)
              state)))))))
+
+(defn handle-key-up [event]
+  (when (and (= (.-code event) "ArrowDown") @soft-dropping)
+    (adjust-timestamp-for-speed-change!
+     soft-drop-speed (game/get-speed @game-state))
+    (reset! soft-dropping false)))
 
 (defn check-game-over [_ _ _ state]
   (when (game/game-over? state)
@@ -74,7 +95,8 @@
           (finish-clear! timestamp))
         (let [diff (- timestamp @prev-timestamp)
               state @game-state
-              speed (game/get-speed state)
+              base-speed (game/get-speed state)
+              speed (if @soft-dropping (min soft-drop-speed base-speed) base-speed)
               next-tick? (> diff speed)
               can-fall? (game/can-fall? state)]
 
@@ -92,7 +114,7 @@
               (let [bounce-elapsed (- timestamp @bounce-start)
                     bounce-offset (ui/calc-bounce-offset bounce-elapsed)]
                 (ui/render-game @game-state {:bounce-offset bounce-offset})))
-            (let [progress (/ diff speed)
+            (let [progress (min 1.0 (/ diff speed))
                   y-offset (if can-fall?
                              (* progress ui/cell-size)
                              0)
@@ -110,6 +132,8 @@
  (fn []
    (.blur new-game-button)
    (js/window.addEventListener "keydown" handle-key-press)
+   (js/window.addEventListener "keyup" handle-key-up)
+   (reset! soft-dropping false)
    (reset! game-state (game/create-game))))
 
 (def toggle-noise-checkbox (js/document.querySelector "#toggle-noise"))
@@ -145,10 +169,11 @@
    (swap! game-state assoc :pause? false)
    (js/requestAnimationFrame game-loop!)))
 
-(.addEventListener js/window "blur" (fn [] (swap! game-state assoc :pause? true)))
+(.addEventListener js/window "blur" (fn [] (reset! soft-dropping false) (swap! game-state assoc :pause? true)))
 
 (defn init []
   (js/window.addEventListener "keydown" handle-key-press)
+  (js/window.addEventListener "keyup" handle-key-up)
   (add-watch game-state :game-over check-game-over)
   (reset! game-state (game/create-game))
   (js/requestAnimationFrame game-loop!))
