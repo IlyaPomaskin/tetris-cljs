@@ -255,12 +255,29 @@
                     (piece->coords ghost-piece))]
     (assoc state :stack next-stack)))
 
-(defn next-piece-cycle [state]
+(defn get-filled-rows [stack]
+  (vec (keep-indexed
+        (fn [i line] (when (utils/filled-line? line) i))
+        stack)))
+
+(defn place-and-continue [state]
   (-> state
       (place-piece)
       (remove-filled-lines)
       (use-next-piece!)
       (check-game-over)))
+
+(defn place-only [state]
+  (place-piece state))
+
+(defn continue-after-clear [state]
+  (-> state
+      (remove-filled-lines)
+      (use-next-piece!)
+      (check-game-over)))
+
+(defn next-piece-cycle [state]
+  (place-and-continue state))
 
 (defn fall [state]
   (let [next-state (move-piece! [0 1] state)
@@ -274,6 +291,4 @@
   (fall state))
 
 (defn hard-drop [state]
-  (-> state
-      (drop-piece)
-      (next-piece-cycle)))
+  (drop-piece state))

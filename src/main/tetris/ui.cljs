@@ -6,6 +6,7 @@
 
 (def canvas (js/document.querySelector "#canvas"))
 (def ctx (.getContext canvas "2d"))
+(set! (.-imageSmoothingEnabled ctx) false)
 
 (def cell-size 20)
 (def next-piece-cell-size 10)
@@ -71,7 +72,7 @@
            y' (* y size)]
        (if (= @ui-mode :noise)
          (do
-           (.putImageData ctx (noise-cell-at x y) x' y')
+           (.drawImage ctx (noise-cell-at x y) x' y')
            (draw-border! x' y' size size "rgba(255, 255, 255, 0.3)"))
          (do
            (draw-rect! x' y' size size (cell->color piece))
@@ -93,13 +94,21 @@
 
 (def noise-image (generate-noise field-width (- (* 22 cell-size) (* 2 cell-size))))
 
-(def noise-cells (vec (repeatedly 100 #(generate-noise cell-size cell-size))))
+(defn image-data->canvas [image-data]
+  (let [c (js/document.createElement "canvas")]
+    (set! (.-width c) (.-width image-data))
+    (set! (.-height c) (.-height image-data))
+    (.putImageData (.getContext c "2d") image-data 0 0)
+    c))
+
+(def noise-cells (vec (repeatedly 100 #(image-data->canvas (generate-noise cell-size cell-size)))))
 
 (defn noise-cell-at [x y]
   (nth noise-cells (mod (+ (* x 7) (* y 13)) 100)))
 
 (def bounce-duration 300)
 (def bounce-amplitude 8)
+(def line-clear-duration 300)
 
 (defn calc-bounce-offset [elapsed]
   (if (or (not= @ui-mode :noise) (<= elapsed 0) (>= elapsed bounce-duration))
@@ -107,9 +116,10 @@
     (let [t (/ elapsed bounce-duration)]
       (* bounce-amplitude (js/Math.sin (* t js/Math.PI))))))
 
-(defn render-stack [stack bounce-offset]
+(defn render-stack [stack bounce-offset clearing-rows clear-progress]
   (let [stack-h (- field-height (* 2 cell-size))
-        noise? (= @ui-mode :noise)]
+        noise? (= @ui-mode :noise)
+        clearing-set (set clearing-rows)]
     (draw-rect! 0 0 canvas-width canvas-height black)
     (when noise?
       (.putImageData ctx noise-image 0 0))
@@ -125,11 +135,13 @@
      stack
      (fn [x y piece]
        (when piece
-         (let [x' (* x cell-size)
-               y' (+ (* (- y 2) cell-size) bounce-offset)]
+         (let [clearing? (contains? clearing-set y)
+               x-offset (if clearing? (* (- clear-progress) field-width) 0)
+               x' (+ (* x cell-size) x-offset)
+               y' (+ (* (- y 2) cell-size) (if clearing? 0 bounce-offset))]
            (if noise?
              (do
-               (.putImageData ctx (noise-cell-at x y) x' y')
+               (.drawImage ctx (noise-cell-at x y) x' y')
                (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
              (do
                (draw-rect! x' y' cell-size cell-size (cell->color piece))
@@ -189,13 +201,13 @@
           piece-y (:y piece)]
       (doseq [[y x] coords]
         (let [x' (* x cell-size)
-              y' (+ (* (- y 2) cell-size) y-offset)
+              y' (js/Math.round (+ (* (- y 2) cell-size) y-offset))
               local-x (- x piece-x)
               local-y (- y piece-y)]
           (when (>= y' 0)
             (if noise?
               (do
-                (.putImageData ctx (noise-cell-at local-x local-y) x' y')
+                (.drawImage ctx (noise-cell-at local-x local-y) x' y')
                 (draw-border! x' y' cell-size cell-size "rgba(255, 255, 255, 0.3)"))
               (do
                 (draw-rect! x' y' cell-size cell-size (cell->color name))
@@ -203,12 +215,13 @@
                 (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))))
     (.restore ctx)))
 
-(defn render-game [state & [{:keys [y-offset bounce-offset]}]]
+(defn render-game [state & [{:keys [y-offset bounce-offset clearing-rows clear-progress]}]]
   (let [y-offset (or y-offset 0)
         bounce-offset (or bounce-offset 0)
-]
+        clearing-rows (or clearing-rows [])
+        clear-progress (or clear-progress 0)]
     (draw-rect! 0 0 canvas-width canvas-height black)
-    (render-stack (:stack state) bounce-offset)
+    (render-stack (:stack state) bounce-offset clearing-rows clear-progress)
     (when (:piece state)
       (render-piece (:piece state) y-offset))
     (render-next-pieces (:buffer state))
