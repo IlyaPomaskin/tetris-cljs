@@ -107,6 +107,7 @@
  "click"
  (fn []
    (.blur new-game-button)
+   (js/window.addEventListener "keydown" handle-key-press)
    (reset! game-state (game/create-game))))
 
 (def toggle-noise-checkbox (js/document.querySelector "#toggle-noise"))
