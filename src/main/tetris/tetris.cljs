@@ -123,7 +123,11 @@
             (do
               (if (not can-fall?)
                 (lock-piece! timestamp)
-                (swap! game-state game/fall))
+                (do
+                  (swap! game-state game/fall)
+                  (when (not (game/can-fall? @game-state))
+                    (reset! bounce-start timestamp)
+                    (lock-piece! timestamp))))
               (reset! prev-timestamp timestamp)
               (let [bounce-elapsed (- timestamp @bounce-start)
                     bounce-offset (ui/calc-bounce-offset bounce-elapsed)
