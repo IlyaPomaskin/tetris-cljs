@@ -203,17 +203,20 @@
     (.clip ctx)
     (let [piece-x (:x piece)
           piece-y (:y piece)]
-      (doseq [[y x] coords]
-        (let [x' (* x cell-size)
-              y' (js/Math.round (+ (* (- y 2) cell-size) y-offset bounce-offset))
-              local-x (- x piece-x)
-              local-y (- y piece-y)]
-          (if noise?
-             (.drawImage ctx (noise-cell-at local-x local-y) x' y')
+      (doall (map-indexed
+        (fn [i [y x]]
+          (let [x' (* x cell-size)
+                y' (js/Math.round (+ (* (- y 2) cell-size) y-offset bounce-offset))
+                local-x (- x piece-x)
+                local-y (- y piece-y)
+                idx (mod (+ (* local-x 7) (* local-y 13) (* i 17)) 100)]
+            (if noise?
+               (.drawImage ctx (nth noise-cells idx) x' y')
             (do
               (draw-rect! x' y' cell-size cell-size (cell->color name))
               (draw-rect! (+ 1 x') (+ 2 y') cell-size cell-size "rgba(0, 0, 0, 0.2)")
-              (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)"))))))
+              (draw-border! x' y' cell-size cell-size "rgba(0, 0, 0, 0.2)")))))
+        coords)))
     (.restore ctx)))
 
 (defn render-game [state & [{:keys [y-offset bounce-offset clearing-rows clear-progress]}]]

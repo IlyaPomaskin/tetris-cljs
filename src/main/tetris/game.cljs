@@ -118,14 +118,16 @@
         piece-symbol (get-in piece [:piece :name])
         piece-x (:x piece)
         piece-y (:y piece)
+        coords (piece->coords piece)
+        indexed-coords (map-indexed vector coords)
         next-stack (reduce
-                    (fn [stack [y x]]
+                    (fn [stack [i [y x]]]
                       (let [local-x (- x piece-x)
                             local-y (- y piece-y)
-                            noise-idx (mod (+ (* local-x 7) (* local-y 13)) 100)]
+                            noise-idx (mod (+ (* local-x 7) (* local-y 13) (* i 17)) 100)]
                         (assoc-in stack [y x] {:type piece-symbol :noise noise-idx})))
                     stack
-                    (piece->coords piece))]
+                    indexed-coords)]
     (assoc state :stack next-stack)))
 
 (defn rotate-clockwise [cells]
