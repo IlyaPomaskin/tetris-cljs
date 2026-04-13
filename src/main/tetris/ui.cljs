@@ -110,9 +110,9 @@
            (draw-rect! (+ 1 x') (+ 2 y') size size "rgba(0, 0, 0, 0.2)")
            (draw-border! x' y' size size "rgba(0, 0, 0, 0.2)")))))))
 
-(def bounce-duration 300)
+(def bounce-duration 150)
 (def bounce-amplitude 8)
-(def line-clear-duration 300)
+(def line-clear-duration 200)
 
 (defn calc-bounce-offset [elapsed]
   (if (or (not= @ui-mode :noise) (<= elapsed 0) (>= elapsed bounce-duration))
